@@ -43,6 +43,8 @@ jobs:
         run: npm run build
       - name: Copy index.html to 404.html for SPA routing
         run: cp dist/index.html dist/404.html
+      - name: Copy CNAME for custom domain
+        run: cp CNAME dist/CNAME
       - name: Disable Jekyll processing
         run: touch dist/.nojekyll
       - name: Upload artifact for deployment
