@@ -1,23 +1,54 @@
 import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider } from './context/AuthContext'
+import { ProtectedRoute } from './components/ProtectedRoute'
+import { Login } from './pages/Login'
+import { Dashboard } from './pages/Dashboard'
+import { FamilyPictures } from './pages/FamilyPictures'
+import { Trips } from './pages/Trips'
+import { FamilyTree } from './pages/FamilyTree'
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 p-6">
-      <header className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Beyhan — Test Automation Developer</h1>
-        <p className="text-gray-600">Practicing modern web development with React, TypeScript and Cypress.</p>
-      </header>
-
-      <main className="max-w-3xl mx-auto mt-8">
-        <section className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-3">Goals</h2>
-          <ul className="list-disc pl-5 space-y-1 text-gray-700">
-            <li>Learn modern front-end tooling used at work</li>
-            <li>Build a personal website to showcase skills</li>
-            <li>Practice TypeScript, React and Cypress automation</li>
-          </ul>
-        </section>
-      </main>
-    </div>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/family-pictures"
+            element={
+              <ProtectedRoute>
+                <FamilyPictures />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trips"
+            element={
+              <ProtectedRoute>
+                <Trips />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/family-tree"
+            element={
+              <ProtectedRoute>
+                <FamilyTree />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   )
 }
