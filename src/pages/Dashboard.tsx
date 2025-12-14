@@ -36,7 +36,7 @@ export const Dashboard: React.FC = () => {
         <div className="max-w-6xl mx-auto px-6 py-8 flex justify-between items-center">
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <span className="text-4xl">👨‍👩‍👧‍👦</span>
+              <span className="text-4xl">�</span>
               <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600" style={{fontFamily: 'Poppins, sans-serif'}}>
                 Beyhan Family
               </h1>
