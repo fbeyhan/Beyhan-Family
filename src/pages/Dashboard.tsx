@@ -12,11 +12,11 @@ interface MenuItemProps {
 const MenuItem: React.FC<MenuItemProps> = ({ title, description, icon, link }) => (
   <Link
     to={link}
-    className="p-6 bg-white rounded-lg shadow-md hover:shadow-lg hover:bg-gray-50 transition duration-200"
+    className="group p-8 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl border border-amber-100 hover:border-amber-300 transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
   >
-    <div className="text-4xl mb-3">{icon}</div>
-    <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
-    <p className="text-gray-600">{description}</p>
+    <div className="text-5xl mb-4 transition-transform duration-300 group-hover:scale-110">{icon}</div>
+    <h3 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-amber-600 transition-colors" style={{fontFamily: 'Poppins, sans-serif'}}>{title}</h3>
+    <p className="text-gray-600 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>{description}</p>
   </Link>
 )
 
@@ -30,26 +30,31 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
       {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
+      <header className="bg-white/80 backdrop-blur-md shadow-md border-b border-amber-100">
+        <div className="max-w-6xl mx-auto px-6 py-8 flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Beyhan Family</h1>
-            <p className="text-gray-600">Welcome, {user?.email}!</p>
+            <h1 className="text-4xl font-bold mb-1 flex items-center gap-3" style={{fontFamily: 'Poppins, sans-serif'}}>
+              <span className="text-4xl">👨‍👩‍👧‍👦</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600">Beyhan Family</span>
+            </h1>
+            <p className="text-gray-600 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Welcome back, {user?.email?.split('@')[0]}! 🎉</p>
           </div>
           <button
             onClick={handleLogout}
-            className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition duration-200"
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+            style={{fontFamily: 'Poppins, sans-serif'}}
           >
-            Logout
+            🚪 Logout
           </button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        <h2 className="text-2xl font-bold text-gray-800 mb-8">Family Portal</h2>
+      <main className="max-w-6xl mx-auto px-6 py-12">
+        <h2 className="text-3xl font-bold text-gray-800 mb-3" style={{fontFamily: 'Poppins, sans-serif'}}>✨ Family Portal</h2>
+        <p className="text-gray-600 mb-10 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Choose where you'd like to explore</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <MenuItem
             title="Family Pictures"

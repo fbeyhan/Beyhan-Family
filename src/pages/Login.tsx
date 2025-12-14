@@ -77,55 +77,67 @@ export const Login: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center px-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-8">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">Beyhan Family</h1>
-        <p className="text-center text-gray-600 mb-8">Family Portal</p>
+    <div className="min-h-screen bg-gradient-to-br from-amber-400 via-orange-400 to-rose-500 flex items-center justify-center px-4 py-12">
+      <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl w-full max-w-md p-10">
+        <div className="text-center mb-8">
+          <div className="inline-block mb-4">
+            <div className="text-6xl">👨‍👩‍👧‍👦</div>
+          </div>
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600 mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>Beyhan Family</h1>
+          <p className="text-gray-600 text-sm font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Welcome to Our Family Portal</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email
+            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>
+              📧 Email Address
             </label>
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your email"
+              className="w-full px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 hover:border-amber-300"
+              placeholder="your.email@example.com"
               autoComplete="email"
+              style={{fontFamily: 'Poppins, sans-serif'}}
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-              Password
+            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>
+              🔒 Password
             </label>
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-5 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200 hover:border-amber-300"
               placeholder="Enter your password"
               autoComplete="current-password"
+              style={{fontFamily: 'Poppins, sans-serif'}}
             />
           </div>
 
-          {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
+          {error && (
+            <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>
+              ⚠️ {error}
+            </div>
+          )}
           {message && (
-            <div className="p-3 bg-green-100 text-green-700 rounded-lg text-sm">
-              {message}
+            <div className="p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>
+              ✅ {message}
             </div>
           )}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-semibold py-2 rounded-lg transition duration-200"
+            className="w-full bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 disabled:from-gray-300 disabled:to-gray-400 text-white font-bold py-3.5 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg disabled:hover:scale-100 disabled:hover:shadow-none"
+            style={{fontFamily: 'Poppins, sans-serif'}}
           >
-            {loading ? 'Signing in...' : 'Login'}
+            {loading ? '🔄 Signing in...' : '🚀 Sign In'}
           </button>
 
           {needsVerification && (
@@ -133,16 +145,19 @@ export const Login: React.FC = () => {
               type="button"
               onClick={handleResendVerification}
               disabled={loading}
-              className="w-full bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white font-semibold py-2 rounded-lg transition duration-200"
+              className="w-full bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 disabled:from-gray-300 disabled:to-gray-400 text-white font-semibold py-3 rounded-xl transition-all duration-300 transform hover:scale-[1.02] hover:shadow-md"
+              style={{fontFamily: 'Poppins, sans-serif'}}
             >
-              Resend Verification Email
+              📧 Resend Verification Email
             </button>
           )}
         </form>
 
-        <p className="text-center text-gray-600 text-sm mt-6">
-          Access is restricted to family members only.
-        </p>
+        <div className="mt-8 pt-6 border-t border-gray-200">
+          <p className="text-center text-gray-500 text-xs font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>
+            🔐 Secure Family Access • Members Only
+          </p>
+        </div>
       </div>
     </div>
   )
