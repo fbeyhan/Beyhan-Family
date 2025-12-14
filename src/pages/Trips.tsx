@@ -16,10 +16,12 @@ export const Trips: React.FC = () => {
           <Link to="/dashboard" className="inline-flex items-center text-amber-600 hover:text-amber-700 font-semibold mb-3 transition-colors" style={{fontFamily: 'Poppins, sans-serif'}}>
             ← Back to Dashboard
           </Link>
-          <h1 className="text-4xl font-bold flex items-center gap-3" style={{fontFamily: 'Poppins, sans-serif'}}>
+          <div className="flex items-center gap-3">
             <span className="text-4xl">✈️</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600">Family Trips</span>
-          </h1>
+            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600" style={{fontFamily: 'Poppins, sans-serif'}}>
+              Family Trips
+            </h1>
+          </div>
         </div>
       </header>
 
