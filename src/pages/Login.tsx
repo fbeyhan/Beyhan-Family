@@ -2,18 +2,22 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { auth } from '../config/firebase'
+import { sendEmailVerification } from 'firebase/auth'
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+  const [needsVerification, setNeedsVerification] = useState(false)
   const { login, logout } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setMessage('')
     setLoading(true)
 
     if (!email.trim() || !password.trim()) {
@@ -27,7 +31,14 @@ export const Login: React.FC = () => {
     if (success) {
       // Check if email is verified
       if (auth.currentUser && !auth.currentUser.emailVerified) {
-        setError('Please verify your email before logging in. Check your inbox for a verification email.')
+        // Auto-send verification email
+        try {
+          await sendEmailVerification(auth.currentUser)
+          setMessage('Verification email sent! Please check your inbox and click the link to verify your email.')
+          setNeedsVerification(true)
+        } catch (err) {
+          setError('Failed to send verification email. Please try again.')
+        }
         await logout()
         setLoading(false)
         return
@@ -35,6 +46,31 @@ export const Login: React.FC = () => {
       navigate('/dashboard')
     } else {
       setError('Invalid email or password. Please try again.')
+    }
+    
+    setLoading(false)
+  }
+
+  const handleResendVerification = async () => {
+    setError('')
+    setMessage('')
+    setLoading(true)
+
+    // Re-login to get current user
+    const success = await login(email, password)
+    
+    if (success && auth.currentUser) {
+      try {
+        await sendEmailVerification(auth.currentUser)
+        setMessage('Verification email resent! Please check your inbox.')
+        await logout()
+      } catch (err: any) {
+        if (err.code === 'auth/too-many-requests') {
+          setError('Too many requests. Please wait a few minutes before trying again.')
+        } else {
+          setError('Failed to send verification email. Please try again.')
+        }
+      }
     }
     
     setLoading(false)
@@ -78,6 +114,11 @@ export const Login: React.FC = () => {
           </div>
 
           {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg text-sm">{error}</div>}
+          {message && (
+            <div className="p-3 bg-green-100 text-green-700 rounded-lg text-sm">
+              {message}
+            </div>
+          )}
 
           <button
             type="submit"
@@ -86,6 +127,17 @@ export const Login: React.FC = () => {
           >
             {loading ? 'Signing in...' : 'Login'}
           </button>
+
+          {needsVerification && (
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={loading}
+              className="w-full bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white font-semibold py-2 rounded-lg transition duration-200"
+            >
+              Resend Verification Email
+            </button>
+          )}
         </form>
 
         <p className="text-center text-gray-600 text-sm mt-6">
