@@ -33,31 +33,33 @@ export const Dashboard: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">
       {/* Header */}
       <header className="bg-white/80 backdrop-blur-md shadow-md border-b border-amber-100">
-        <div className="max-w-6xl mx-auto px-6 py-8 flex justify-between items-center">
-          <div>
-            <div className="flex items-center gap-3 mb-1">
-              <span className="text-4xl">🏠</span>
-              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600" style={{fontFamily: 'Poppins, sans-serif'}}>
-                Beyhan Family
-              </h1>
+        <div className="max-w-6xl mx-auto px-6 py-6 md:py-8">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-3xl md:text-4xl">🏠</span>
+                <h1 className="text-2xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600" style={{fontFamily: 'Poppins, sans-serif'}}>
+                  Beyhan Family
+                </h1>
+              </div>
+              <p className="text-sm md:text-base text-gray-600 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Welcome back, {user?.email?.split('@')[0]}! 🎉</p>
             </div>
-            <p className="text-gray-600 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Welcome back, {user?.email?.split('@')[0]}! 🎉</p>
-          </div>
-          <div className="flex gap-3">
-            <Link
-              to="/change-password"
-              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
-              style={{fontFamily: 'Poppins, sans-serif'}}
-            >
-              🔒 Change Password
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
-              style={{fontFamily: 'Poppins, sans-serif'}}
-            >
-              🚪 Logout
-            </button>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <Link
+                to="/change-password"
+                className="px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm md:text-base font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg text-center"
+                style={{fontFamily: 'Poppins, sans-serif'}}
+              >
+                🔒 Change Password
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white text-sm md:text-base font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                style={{fontFamily: 'Poppins, sans-serif'}}
+              >
+                🚪 Logout
+              </button>
+            </div>
           </div>
         </div>
       </header>
