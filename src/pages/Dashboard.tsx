@@ -21,11 +21,11 @@ const MenuItem: React.FC<MenuItemProps> = ({ title, description, icon, link }) =
 )
 
 export const Dashboard: React.FC = () => {
-  const { username, logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     navigate('/login')
   }
 
@@ -36,7 +36,7 @@ export const Dashboard: React.FC = () => {
         <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-800">Beyhan Family</h1>
-            <p className="text-gray-600">Welcome, {username}!</p>
+            <p className="text-gray-600">Welcome, {user?.email}!</p>
           </div>
           <button
             onClick={handleLogout}
