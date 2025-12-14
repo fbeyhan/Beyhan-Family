@@ -43,13 +43,22 @@ export const Dashboard: React.FC = () => {
             </div>
             <p className="text-gray-600 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Welcome back, {user?.email?.split('@')[0]}! 🎉</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
-            style={{fontFamily: 'Poppins, sans-serif'}}
-          >
-            🚪 Logout
-          </button>
+          <div className="flex gap-3">
+            <Link
+              to="/change-password"
+              className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+              style={{fontFamily: 'Poppins, sans-serif'}}
+            >
+              🔒 Change Password
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+              style={{fontFamily: 'Poppins, sans-serif'}}
+            >
+              🚪 Logout
+            </button>
+          </div>
         </div>
       </header>
 

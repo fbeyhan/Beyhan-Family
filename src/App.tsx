@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard'
 import { FamilyPictures } from './pages/FamilyPictures'
 import { Trips } from './pages/Trips'
 import { FamilyTree } from './pages/FamilyTree'
+import { ChangePassword } from './pages/ChangePassword'
 
 export default function App() {
   return (
@@ -43,6 +44,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <FamilyTree />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute>
+                <ChangePassword />
               </ProtectedRoute>
             }
           />
