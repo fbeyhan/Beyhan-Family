@@ -29,7 +29,7 @@ export const FamilyTree: React.FC = () => {
           <div className="flex justify-center mb-12">
             <div className="text-center">
               <div className="inline-block bg-gradient-to-br from-amber-100 to-rose-100 rounded-2xl p-8 mb-4 shadow-lg border border-amber-200">
-                <span className="text-4xl">👨‍👩‍👧‍👦</span>
+                <span className="text-4xl">🏠</span>
                 <p className="mt-3 font-bold text-gray-800" style={{fontFamily: 'Poppins, sans-serif'}}>Beyhan Family</p>
               </div>
             </div>

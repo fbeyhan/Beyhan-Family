@@ -80,7 +80,7 @@ export const Login: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-amber-400 via-orange-400 to-rose-500 flex items-center justify-center px-4 py-12">
       <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl w-full max-w-md p-10">
         <div className="text-center mb-8">
-          <div className="text-6xl mb-4">�</div>
+          <div className="text-6xl mb-4">🏠</div>
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600 mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>Beyhan Family</h1>
           <p className="text-gray-600 text-sm font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Welcome to Our Family Portal</p>
         </div>
