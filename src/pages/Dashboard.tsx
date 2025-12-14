@@ -35,10 +35,12 @@ export const Dashboard: React.FC = () => {
       <header className="bg-white/80 backdrop-blur-md shadow-md border-b border-amber-100">
         <div className="max-w-6xl mx-auto px-6 py-8 flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold mb-1 flex items-center gap-3" style={{fontFamily: 'Poppins, sans-serif'}}>
+            <div className="flex items-center gap-3 mb-1">
               <span className="text-4xl">👨‍👩‍👧‍👦</span>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600">Beyhan Family</span>
-            </h1>
+              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-rose-600" style={{fontFamily: 'Poppins, sans-serif'}}>
+                Beyhan Family
+              </h1>
+            </div>
             <p className="text-gray-600 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Welcome back, {user?.email?.split('@')[0]}! 🎉</p>
           </div>
           <button
