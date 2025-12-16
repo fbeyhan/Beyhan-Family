@@ -18,6 +18,7 @@ interface FamilyMember {
   spouseId?: string
   biography?: string
   dateOfDeath?: Timestamp
+  displayOrder?: number
   createdAt: Timestamp
   createdBy: string
 }
@@ -31,7 +32,15 @@ export const FamilyTree: React.FC = () => {
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [viewMode, setViewMode] = useState<'tree' | 'list'>('tree')
+  const [showDuplicates, setShowDuplicates] = useState(false)
+  const [duplicates, setDuplicates] = useState<{ name: string; members: FamilyMember[] }[]>([])
+  const [showImageCropper, setShowImageCropper] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [originalFile, setOriginalFile] = useState<File | null>(null)
+  const [cropPosition, setCropPosition] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const imageRef = useRef<HTMLImageElement>(null)
   const { user: currentUser } = useAuth()
 
   const [memberForm, setMemberForm] = useState({
@@ -45,7 +54,8 @@ export const FamilyTree: React.FC = () => {
     biography: '',
     dateOfDeath: '',
     profilePictureUrl: '',
-    profilePicturePath: ''
+    profilePicturePath: '',
+    displayOrder: undefined as number | undefined
   })
 
   useEffect(() => {
@@ -87,6 +97,9 @@ export const FamilyTree: React.FC = () => {
         createdBy: currentUser.email
       }
 
+      if (memberForm.displayOrder !== undefined) {
+        memberData.displayOrder = memberForm.displayOrder
+      }
       if (memberForm.dateOfBirth) {
         memberData.dateOfBirth = Timestamp.fromDate(new Date(memberForm.dateOfBirth))
       }
@@ -127,6 +140,9 @@ export const FamilyTree: React.FC = () => {
         spouseId: memberForm.spouseId || ''
       }
 
+      if (memberForm.displayOrder !== undefined) {
+        updateData.displayOrder = memberForm.displayOrder
+      }
       if (memberForm.dateOfBirth) {
         updateData.dateOfBirth = Timestamp.fromDate(new Date(memberForm.dateOfBirth))
       }
@@ -185,7 +201,8 @@ export const FamilyTree: React.FC = () => {
       biography: member.biography || '',
       dateOfDeath: member.dateOfDeath ? new Date(member.dateOfDeath.toMillis()).toISOString().split('T')[0] : '',
       profilePictureUrl: member.profilePictureUrl || '',
-      profilePicturePath: member.profilePicturePath || ''
+      profilePicturePath: member.profilePicturePath || '',
+      displayOrder: member.displayOrder
     })
     setShowAddMember(false)
   }
@@ -199,13 +216,29 @@ export const FamilyTree: React.FC = () => {
       return
     }
 
+    // Show image cropper
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setSelectedImage(e.target?.result as string)
+      setOriginalFile(file)
+      setCropPosition({ x: 0, y: 0 })
+      setZoom(1)
+      setShowImageCropper(true)
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const uploadCroppedImage = async (croppedBlob: Blob) => {
+    if (!currentUser || !originalFile) return
+
     setUploadingPhoto(true)
     setUploadProgress(0)
+    setShowImageCropper(false)
 
     const timestamp = Date.now()
-    const filename = `${timestamp}_${file.name}`
+    const filename = `${timestamp}_${originalFile.name}`
     const storageRef = ref(storage, `family-members/${filename}`)
-    const uploadTask = uploadBytesResumable(storageRef, file)
+    const uploadTask = uploadBytesResumable(storageRef, croppedBlob)
 
     uploadTask.on(
       'state_changed',
@@ -230,6 +263,8 @@ export const FamilyTree: React.FC = () => {
 
           setUploadingPhoto(false)
           setUploadProgress(0)
+          setSelectedImage(null)
+          setOriginalFile(null)
           alert('Photo uploaded! Click Add/Update Member to save.')
         } catch (error: any) {
           console.error('Error getting download URL:', error)
@@ -238,6 +273,46 @@ export const FamilyTree: React.FC = () => {
         }
       }
     )
+  }
+
+  const handleCropComplete = () => {
+    if (!imageRef.current || !selectedImage) return
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+
+    const img = imageRef.current
+    const size = 400 // Output size
+
+    canvas.width = size
+    canvas.height = size
+
+    // Calculate crop area (circular crop)
+    const scale = zoom
+    const sourceSize = Math.min(img.naturalWidth, img.naturalHeight) / scale
+    
+    const sourceX = (img.naturalWidth / 2) - (sourceSize / 2) - (cropPosition.x * img.naturalWidth / img.width)
+    const sourceY = (img.naturalHeight / 2) - (sourceSize / 2) - (cropPosition.y * img.naturalHeight / img.height)
+
+    // Draw cropped image
+    ctx.drawImage(
+      img,
+      sourceX,
+      sourceY,
+      sourceSize,
+      sourceSize,
+      0,
+      0,
+      size,
+      size
+    )
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        uploadCroppedImage(blob)
+      }
+    }, 'image/jpeg', 0.9)
   }
 
   const resetForm = () => {
@@ -299,6 +374,131 @@ export const FamilyTree: React.FC = () => {
     )
   }
 
+  const updateDisplayOrder = async (memberId: string, newOrder: number) => {
+    try {
+      console.log('Updating display order:', { memberId, newOrder })
+      await updateDoc(doc(db, 'familyMembers', memberId), {
+        displayOrder: newOrder
+      })
+      console.log('Display order updated successfully')
+      await loadMembers()
+    } catch (error: any) {
+      console.error('Error updating display order:', error)
+      alert(`Failed to update order: ${error.message}`)
+    }
+  }
+
+  const moveLeft = async (member: FamilyMember) => {
+    console.log('Moving left:', member.firstName, member.lastName)
+    const currentOrder = member.displayOrder ?? 500
+    const newOrder = currentOrder - 100
+    console.log('Current order:', currentOrder, 'New order:', newOrder)
+    
+    // If person has a spouse, move them together
+    if (member.spouseId) {
+      const spouse = members.find(m => m.id === member.spouseId)
+      if (spouse) {
+        console.log('Also moving spouse:', spouse.firstName, spouse.lastName)
+        await updateDisplayOrder(spouse.id, newOrder)
+      }
+    }
+    
+    await updateDisplayOrder(member.id, newOrder)
+  }
+
+  const moveRight = async (member: FamilyMember) => {
+    console.log('Moving right:', member.firstName, member.lastName)
+    const currentOrder = member.displayOrder ?? 500
+    const newOrder = currentOrder + 100
+    console.log('Current order:', currentOrder, 'New order:', newOrder)
+    
+    // If person has a spouse, move them together
+    if (member.spouseId) {
+      const spouse = members.find(m => m.id === member.spouseId)
+      if (spouse) {
+        console.log('Also moving spouse:', spouse.firstName, spouse.lastName)
+        await updateDisplayOrder(spouse.id, newOrder)
+      }
+    }
+    
+    await updateDisplayOrder(member.id, newOrder)
+  }
+
+  const checkForDuplicates = () => {
+    console.log('=== CHECKING FOR DUPLICATES ===')
+    console.log('Total members:', members.length)
+    
+    // Log all Mehmet Beyhan entries for debugging
+    const mehmets = members.filter(m => 
+      m.firstName.toLowerCase().includes('mehmet') && 
+      m.lastName.toLowerCase().includes('beyhan')
+    )
+    console.log('Mehmet Beyhan entries found:', mehmets.length)
+    mehmets.forEach((m, idx) => {
+      console.log(`Mehmet #${idx + 1}:`, {
+        id: m.id,
+        firstName: m.firstName,
+        lastName: m.lastName,
+        dateOfBirth: m.dateOfBirth?.toDate?.()?.toLocaleDateString(),
+        dateOfDeath: m.dateOfDeath?.toDate?.()?.toLocaleDateString(),
+        spouseId: m.spouseId,
+        parentIds: m.parentIds,
+        children: getChildren(m.id).length
+      })
+    })
+    
+    // Group members by full name (case-insensitive, exact match)
+    const exactNameGroups = new Map<string, FamilyMember[]>()
+    
+    members.forEach(member => {
+      const exactName = `${member.firstName.trim()} ${member.lastName.trim()}`.toLowerCase()
+      if (!exactNameGroups.has(exactName)) {
+        exactNameGroups.set(exactName, [])
+      }
+      exactNameGroups.get(exactName)!.push(member)
+    })
+
+    // Find duplicates
+    const found: { name: string; members: FamilyMember[] }[] = []
+    
+    exactNameGroups.forEach((memberList, name) => {
+      if (memberList.length > 1) {
+        found.push({ name: name + ' (exact match)', members: memberList })
+      }
+    })
+
+    // Check for same name + same birth/death dates
+    const dateGroups = new Map<string, FamilyMember[]>()
+    members.forEach(member => {
+      const birthDate = member.dateOfBirth?.toDate?.()?.toLocaleDateString() || 'no-birth'
+      const deathDate = member.dateOfDeath?.toDate?.()?.toLocaleDateString() || 'no-death'
+      const key = `${member.firstName.trim()} ${member.lastName.trim()}|${birthDate}|${deathDate}`.toLowerCase()
+      
+      if (!dateGroups.has(key)) {
+        dateGroups.set(key, [])
+      }
+      dateGroups.get(key)!.push(member)
+    })
+
+    dateGroups.forEach((memberList, key) => {
+      if (memberList.length > 1) {
+        const alreadyFound = found.some(f => 
+          f.members.length === memberList.length && 
+          f.members.every(m => memberList.includes(m))
+        )
+        if (!alreadyFound) {
+          found.push({ name: key.split('|')[0] + ' (same dates)', members: memberList })
+        }
+      }
+    })
+
+    console.log('Duplicates found:', found.length)
+    console.log('Duplicate details:', found)
+    
+    setDuplicates(found)
+    setShowDuplicates(true)
+  }
+
   const addParentField = () => {
     if (memberForm.parentIds.length < 2) {
       setMemberForm({
@@ -335,22 +535,27 @@ export const FamilyTree: React.FC = () => {
     // Start with true root members (oldest generation)
     const roots = getRootMembers()
     const firstGen: FamilyMember[] = []
+    const addedToFirstGen = new Set<string>()
     
-    roots.forEach(root => {
-      if (!processed.has(root.id)) {
+    // Add all root members first (will sort them later)
+    // Sort roots by displayOrder first to maintain order
+    const sortedRoots = [...roots].sort((a, b) => {
+      const orderA = a.displayOrder ?? 1000
+      const orderB = b.displayOrder ?? 1000
+      return orderA - orderB
+    })
+    
+    sortedRoots.forEach(root => {
+      if (!addedToFirstGen.has(root.id)) {
         firstGen.push(root)
         processed.add(root.id)
-        
-        // Add spouse to same generation
-        if (root.spouseId) {
-          const spouse = members.find(m => m.id === root.spouseId)
-          if (spouse && !processed.has(spouse.id)) {
-            firstGen.push(spouse)
-            processed.add(spouse.id)
-          }
-        }
+        addedToFirstGen.add(root.id)
       }
     })
+    
+    // First generation is already sorted from the roots
+    console.log('=== FIRST GENERATION ===')
+    console.log('Members:', firstGen.map(m => `${m.firstName} ${m.lastName} (${m.displayOrder ?? 1000})`).join(', '))
     
     if (firstGen.length > 0) {
       generations.push(firstGen)
@@ -362,37 +567,52 @@ export const FamilyTree: React.FC = () => {
       const nextGen: FamilyMember[] = []
       const nextGenIds = new Set<string>()
       
-      // Collect all unique parent IDs from current generation
-      const allParentIdsInGen = new Set<string>()
+      // Process parents in order they appear in current generation
+      // This keeps sibling groups together visually
       generations[currentGen].forEach(parent => {
-        allParentIdsInGen.add(parent.id)
-      })
-      
-      // Get ALL children who have ANY parent in the current generation
-      // This ensures siblings are grouped together
-      members.forEach(person => {
-        if (processed.has(person.id)) return
-        
-        // Check if this person has any parent in the current generation
-        const hasParentInCurrentGen = person.parentIds && person.parentIds.some(parentId => 
-          allParentIdsInGen.has(parentId)
+        // Get children of this parent
+        const childrenOfParent = members.filter(person => 
+          !processed.has(person.id) &&
+          person.parentIds && 
+          person.parentIds.includes(parent.id)
         )
         
-        if (hasParentInCurrentGen && !nextGenIds.has(person.id)) {
-          nextGen.push(person)
-          nextGenIds.add(person.id)
-          processed.add(person.id)
+        // Sort children by displayOrder (if set), then by birth date, then by name
+        childrenOfParent.sort((a, b) => {
+          // First by displayOrder if both have it
+          if (a.displayOrder !== undefined && b.displayOrder !== undefined) {
+            return a.displayOrder - b.displayOrder
+          }
+          if (a.displayOrder !== undefined) return -1
+          if (b.displayOrder !== undefined) return 1
           
-          // Always add spouse to same generation
-          if (person.spouseId) {
-            const spouse = members.find(m => m.id === person.spouseId)
-            if (spouse && !processed.has(spouse.id) && !nextGenIds.has(spouse.id)) {
-              nextGen.push(spouse)
-              nextGenIds.add(spouse.id)
-              processed.add(spouse.id)
+          // Then by birth date
+          if (a.dateOfBirth && b.dateOfBirth) {
+            return a.dateOfBirth.toMillis() - b.dateOfBirth.toMillis()
+          }
+          
+          // Finally by name
+          return `${a.firstName} ${a.lastName}`.localeCompare(`${b.firstName} ${b.lastName}`)
+        })
+        
+        // Add each child and their spouse
+        childrenOfParent.forEach(child => {
+          if (!nextGenIds.has(child.id)) {
+            nextGen.push(child)
+            nextGenIds.add(child.id)
+            processed.add(child.id)
+            
+            // Add spouse immediately after this child
+            if (child.spouseId) {
+              const spouse = members.find(m => m.id === child.spouseId)
+              if (spouse && !processed.has(spouse.id) && !nextGenIds.has(spouse.id)) {
+                nextGen.push(spouse)
+                nextGenIds.add(spouse.id)
+                processed.add(spouse.id)
+              }
             }
           }
-        }
+        })
       })
       
       if (nextGen.length > 0) {
@@ -636,6 +856,20 @@ export const FamilyTree: React.FC = () => {
                   style={{fontFamily: 'Poppins, sans-serif'}}
                 />
               </div>
+
+              <div>
+                <label className="block text-gray-700 font-medium mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>
+                  Display Order (lower = left, higher = right)
+                </label>
+                <input
+                  type="number"
+                  value={memberForm.displayOrder ?? ''}
+                  onChange={(e) => setMemberForm({ ...memberForm, displayOrder: e.target.value ? parseInt(e.target.value) : undefined })}
+                  placeholder="Leave empty for default"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  style={{fontFamily: 'Poppins, sans-serif'}}
+                />
+              </div>
             </div>
 
             {/* Parents Selection */}
@@ -842,15 +1076,21 @@ export const FamilyTree: React.FC = () => {
                 }
                 
                 return (
-                <div key={genIndex} className="mb-16 relative">
+                <div key={genIndex} className="mb-16 relative" style={{ paddingTop: '40px' }}>
                   <div className="flex justify-center gap-16 items-start relative">
                     {generation.map((member, memberIndex) => {
                       const spouse = member.spouseId ? members.find(m => m.id === member.spouseId) : null
                       const hasSpouseInSameGen = spouse && generation.find(m => m.id === spouse.id)
                       
-                      // Skip this member if they're someone else's spouse and will be rendered with their partner
+                      // Skip this member if:
+                      // 1. They're already rendered as someone BEFORE them's spouse, OR
+                      // 2. They have a spouse who comes BEFORE them (so render with the spouse who comes first)
                       const isRenderedAsSpouse = generation.slice(0, memberIndex).some(m => m.spouseId === member.id)
-                      if (isRenderedAsSpouse) return null
+                      const hasSpouseBeforeThem = hasSpouseInSameGen && memberIndex > generation.findIndex(m => m.id === member.spouseId)
+                      
+                      if (isRenderedAsSpouse || hasSpouseBeforeThem) {
+                        return null
+                      }
                       
                       // Get children of this couple (that are in the NEXT generation only)
                       const coupleChildren = getChildren(member.id).filter(child => {
@@ -874,7 +1114,7 @@ export const FamilyTree: React.FC = () => {
                           {/* Couple container */}
                           <div className="flex gap-3 items-start justify-center relative">
                             {/* Member card */}
-                            <div className="relative">
+                            <div className="relative group">
                               <div
                                 onClick={() => setSelectedMember(member)}
                                 className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-32"
@@ -909,6 +1149,30 @@ export const FamilyTree: React.FC = () => {
                                 </div>
                               </div>
                               
+                              {/* Reorder buttons - visible on hover */}
+                              <div className="absolute -top-9 left-0 right-0 flex justify-center gap-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity" style={{ marginBottom: '4px' }}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    moveLeft(member)
+                                  }}
+                                  className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-lg shadow-xl border-2 border-blue-700 transition-all"
+                                  title="Move left"
+                                >
+                                  ⬅
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    moveRight(member)
+                                  }}
+                                  className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-lg shadow-xl border-2 border-blue-700 transition-all"
+                                  title="Move right"
+                                >
+                                  ➡
+                                </button>
+                              </div>
+                              
                               {/* Connector line from person going down */}
                               {hasSpouseInSameGen && spouse && (
                                 <div className="absolute top-1/3 -right-1.5 w-3 h-0.5 bg-gray-400"></div>
@@ -917,7 +1181,7 @@ export const FamilyTree: React.FC = () => {
                             
                             {/* Spouse card (if in same generation) */}
                             {hasSpouseInSameGen && spouse && (
-                              <div className="relative">
+                              <div className="relative group">
                                 <div
                                   onClick={() => setSelectedMember(spouse)}
                                   className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-32"
@@ -950,6 +1214,30 @@ export const FamilyTree: React.FC = () => {
                                       </p>
                                     )}
                                   </div>
+                                </div>
+                                
+                                {/* Reorder buttons - visible on hover */}
+                                <div className="absolute -top-9 left-0 right-0 flex justify-center gap-2 z-50 opacity-0 group-hover:opacity-100 transition-opacity" style={{ marginBottom: '4px' }}>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      moveLeft(spouse)
+                                    }}
+                                    className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-lg shadow-xl border-2 border-blue-700 transition-all"
+                                    title="Move left"
+                                  >
+                                    ⬅
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      moveRight(spouse)
+                                    }}
+                                    className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold rounded-lg shadow-xl border-2 border-blue-700 transition-all"
+                                    title="Move right"
+                                  >
+                                    ➡
+                                  </button>
                                 </div>
                                 
                                 {/* Connector line from spouse going down */}
@@ -1332,6 +1620,296 @@ export const FamilyTree: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Image Cropper Modal */}
+      {showImageCropper && selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4"
+          onClick={() => {
+            setShowImageCropper(false)
+            setSelectedImage(null)
+            setOriginalFile(null)
+          }}
+        >
+          <div
+            className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-4" style={{fontFamily: 'Poppins, sans-serif'}}>
+                Adjust Photo
+              </h2>
+              
+              <div className="relative bg-gray-100 rounded-xl overflow-hidden mb-4" style={{ height: '400px' }}>
+                <div 
+                  className="absolute inset-0 flex items-center justify-center overflow-hidden"
+                  style={{
+                    cursor: 'move'
+                  }}
+                  onMouseDown={(e) => {
+                    const startX = e.clientX - cropPosition.x
+                    const startY = e.clientY - cropPosition.y
+                    
+                    const handleMouseMove = (moveEvent: MouseEvent) => {
+                      setCropPosition({
+                        x: moveEvent.clientX - startX,
+                        y: moveEvent.clientY - startY
+                      })
+                    }
+                    
+                    const handleMouseUp = () => {
+                      document.removeEventListener('mousemove', handleMouseMove)
+                      document.removeEventListener('mouseup', handleMouseUp)
+                    }
+                    
+                    document.addEventListener('mousemove', handleMouseMove)
+                    document.addEventListener('mouseup', handleMouseUp)
+                  }}
+                >
+                  <img
+                    ref={imageRef}
+                    src={selectedImage}
+                    alt="Preview"
+                    style={{
+                      transform: `translate(${cropPosition.x}px, ${cropPosition.y}px) scale(${zoom})`,
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain'
+                    }}
+                    draggable={false}
+                  />
+                </div>
+                
+                {/* Circular crop guide */}
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                  <div 
+                    className="border-4 border-white rounded-full shadow-2xl"
+                    style={{ 
+                      width: '300px', 
+                      height: '300px',
+                      boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)'
+                    }}
+                  ></div>
+                </div>
+              </div>
+
+              {/* Zoom slider */}
+              <div className="mb-6">
+                <label className="block text-gray-700 font-medium mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>
+                  Zoom
+                </label>
+                <input
+                  type="range"
+                  min="0.5"
+                  max="3"
+                  step="0.1"
+                  value={zoom}
+                  onChange={(e) => setZoom(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-4">
+                <p className="text-sm text-blue-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                  💡 <strong>Tip:</strong> Drag the image to reposition it, and use the zoom slider to adjust the size. The circle shows what will be saved.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCropComplete}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
+                  style={{fontFamily: 'Poppins, sans-serif'}}
+                >
+                  ✓ Use This Photo
+                </button>
+                <button
+                  onClick={() => {
+                    setShowImageCropper(false)
+                    setSelectedImage(null)
+                    setOriginalFile(null)
+                  }}
+                  className="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded-xl transition-all duration-300"
+                  style={{fontFamily: 'Poppins, sans-serif'}}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicates Modal */}
+      {showDuplicates && (
+        <div
+          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4 overflow-auto"
+          onClick={() => setShowDuplicates(false)}
+        >
+          <div
+            className="relative w-full max-w-4xl my-8 bg-white rounded-2xl shadow-2xl max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 rounded-t-2xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-800" style={{fontFamily: 'Poppins, sans-serif'}}>
+                  🔍 Duplicate Members Check
+                </h2>
+                <button
+                  onClick={() => setShowDuplicates(false)}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center text-gray-800 font-bold text-xl transition-all"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {duplicates.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">✅</div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>
+                    No Duplicates Found!
+                  </h3>
+                  <p className="text-gray-600" style={{fontFamily: 'Poppins, sans-serif'}}>
+                    All family members have unique names.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <p className="text-amber-800 font-semibold" style={{fontFamily: 'Poppins, sans-serif'}}>
+                      ⚠️ Found {duplicates.length} duplicate name{duplicates.length > 1 ? 's' : ''}
+                    </p>
+                    <p className="text-sm text-amber-700 mt-1" style={{fontFamily: 'Poppins, sans-serif'}}>
+                      Review each duplicate below and delete the incorrect entries.
+                    </p>
+                  </div>
+
+                  {duplicates.map(({ name, members: dupMembers }) => (
+                    <div key={name} className="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                      <h3 className="text-lg font-bold text-gray-800 mb-4 capitalize" style={{fontFamily: 'Poppins, sans-serif'}}>
+                        🔴 "{name}" ({dupMembers.length} entries)
+                      </h3>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {dupMembers.map((member, idx) => (
+                          <div key={member.id} className="bg-white border border-gray-300 rounded-lg p-4">
+                            <div className="flex items-start justify-between mb-3">
+                              <div className="flex items-center gap-3">
+                                {member.profilePictureUrl ? (
+                                  <img
+                                    src={member.profilePictureUrl}
+                                    alt={`${member.firstName} ${member.lastName}`}
+                                    className="w-16 h-16 rounded-full object-cover border-2 border-gray-200"
+                                  />
+                                ) : (
+                                  <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl">
+                                    {member.gender === 'male' ? '👨' : member.gender === 'female' ? '👩' : '👤'}
+                                  </div>
+                                )}
+                                <div>
+                                  <h4 className="font-bold text-gray-800" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                    Entry #{idx + 1}
+                                  </h4>
+                                  <p className="text-xs text-gray-500" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                    ID: {member.id.substring(0, 8)}...
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div className="space-y-1 text-sm mb-3">
+                              <p className="text-gray-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                <strong>Created:</strong> {member.createdAt?.toDate?.()?.toLocaleDateString() || 'Unknown'}
+                              </p>
+                              <p className="text-gray-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                <strong>Created by:</strong> {member.createdBy || 'Unknown'}
+                              </p>
+                              <p className="text-gray-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                <strong>Birth:</strong> {member.dateOfBirth ? formatDate(member.dateOfBirth) : 'Not set'}
+                              </p>
+                              {member.dateOfDeath && (
+                                <p className="text-gray-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                  <strong>Death:</strong> {formatDate(member.dateOfDeath)}
+                                </p>
+                              )}
+                              <p className="text-gray-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                <strong>Gender:</strong> {member.gender || 'Not set'}
+                              </p>
+                              <p className="text-gray-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                <strong>Parents:</strong> {member.parentIds?.length || 0}
+                              </p>
+                              <p className="text-gray-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                <strong>Spouse:</strong> {member.spouseId ? getMemberName(member.spouseId) : 'None'}
+                              </p>
+                              <p className="text-gray-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                <strong>Children:</strong> {getChildren(member.id).length}
+                              </p>
+                              <p className="text-gray-700" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                <strong>Biography:</strong> {member.biography ? `${member.biography.length} chars` : 'None'}
+                              </p>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => {
+                                  setSelectedMember(member)
+                                  setShowDuplicates(false)
+                                }}
+                                className="flex-1 px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-semibold rounded-lg transition-colors"
+                                style={{fontFamily: 'Poppins, sans-serif'}}
+                              >
+                                👁️ View
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleEditMember(member)
+                                  setShowDuplicates(false)
+                                }}
+                                className="flex-1 px-3 py-2 bg-green-100 hover:bg-green-200 text-green-700 text-sm font-semibold rounded-lg transition-colors"
+                                style={{fontFamily: 'Poppins, sans-serif'}}
+                              >
+                                ✏️ Edit
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  if (window.confirm(`Delete "${member.firstName} ${member.lastName}" (Entry #${idx + 1})?\n\nThis will remove:\n- ${getChildren(member.id).length} child relationships\n- Spouse connection: ${member.spouseId ? 'Yes' : 'No'}\n\nThis cannot be undone!`)) {
+                                    await handleDeleteMember(member)
+                                    // Refresh duplicates check
+                                    setTimeout(() => checkForDuplicates(), 500)
+                                  }
+                                }}
+                                className="flex-1 px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-semibold rounded-lg transition-colors"
+                                style={{fontFamily: 'Poppins, sans-serif'}}
+                              >
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <h4 className="font-bold text-blue-800 mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>
+                      💡 Tips for Choosing Which to Keep
+                    </h4>
+                    <ul className="text-sm text-blue-700 space-y-1" style={{fontFamily: 'Poppins, sans-serif'}}>
+                      <li>• Keep the entry with more complete information (biography, dates, place of birth)</li>
+                      <li>• Keep the entry with the profile picture if only one has it</li>
+                      <li>• Keep the entry with more relationships (parents, spouse, children)</li>
+                      <li>• Keep the entry created earlier if both are identical</li>
+                      <li>• Check which entry other family members are connected to</li>
+                    </ul>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Member Detail Modal - Adding in final step */}
       {selectedMember && (
