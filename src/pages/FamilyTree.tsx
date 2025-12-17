@@ -327,7 +327,8 @@ export const FamilyTree: React.FC = () => {
       biography: '',
       dateOfDeath: '',
       profilePictureUrl: '',
-      profilePicturePath: ''
+      profilePicturePath: '',
+      displayOrder: undefined
     })
   }
 
