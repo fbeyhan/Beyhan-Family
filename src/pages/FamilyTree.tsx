@@ -602,14 +602,22 @@ export const FamilyTree: React.FC = () => {
             nextGenIds.add(child.id)
             processed.add(child.id)
             
-            // Add spouse immediately after this child
+            // Add spouse immediately after this child (even if spouse has different/no parents)
             if (child.spouseId) {
               const spouse = members.find(m => m.id === child.spouseId)
-              if (spouse && !processed.has(spouse.id) && !nextGenIds.has(spouse.id)) {
+              if (spouse && !nextGenIds.has(spouse.id)) {
                 nextGen.push(spouse)
                 nextGenIds.add(spouse.id)
                 processed.add(spouse.id)
               }
+            }
+          } else if (child.spouseId && !nextGenIds.has(child.spouseId)) {
+            // If child was already added but spouse wasn't, add spouse now
+            const spouse = members.find(m => m.id === child.spouseId)
+            if (spouse && !nextGenIds.has(spouse.id)) {
+              nextGen.push(spouse)
+              nextGenIds.add(spouse.id)
+              processed.add(spouse.id)
             }
           }
         })
@@ -1055,30 +1063,24 @@ export const FamilyTree: React.FC = () => {
           /* Tree View - Ancestry.com Style */
           <div className="overflow-x-auto pb-12">
             <div className="min-w-max px-12">
-              {buildGenerations().map((generation, genIndex) => {
-                // Skip rendering generation sections for children that are already displayed
-                // under their parents (applies to Generation 3 and beyond)
+              {(() => {
+                const generations = buildGenerations()
+                
+                return generations.map((generation, genIndex) => {
+                // Only render generations 1 and 2 as separate sections
+                // All other generations are shown as children/grandchildren
                 if (genIndex >= 2) {
-                  const prevGen = buildGenerations()[genIndex - 1]
-                  const allShownUnderParents = generation.every(person => {
-                    // Check if person has parents in previous generation
-                    const hasParents = person.parentIds && person.parentIds.some(parentId => 
-                      prevGen.some(parent => parent.id === parentId)
-                    )
-                    // Or if person is a spouse of someone with parents in prev gen
-                    const isSpouseOfChild = person.spouseId && prevGen.some(parent => 
-                      parent.id === members.find(m => m.id === person.spouseId)?.parentIds?.[0] ||
-                      parent.id === members.find(m => m.id === person.spouseId)?.parentIds?.[1]
-                    )
-                    return hasParents || isSpouseOfChild
-                  })
-                  if (allShownUnderParents) return null
+                  return null
                 }
+                
+                console.log(`=== RENDERING GENERATION ${genIndex + 1} ===`)
+                console.log('Members:', generation.map(m => `${m.firstName} ${m.lastName}`).join(', '))
                 
                 return (
                 <div key={genIndex} className="mb-16 relative" style={{ paddingTop: '40px' }}>
                   <div className="flex justify-center gap-16 items-start relative">
                     {generation.map((member, memberIndex) => {
+                      console.log(`Rendering member: ${member.firstName} ${member.lastName}, spouse: ${member.spouseId ? members.find(m => m.id === member.spouseId)?.firstName : 'none'}`)
                       const spouse = member.spouseId ? members.find(m => m.id === member.spouseId) : null
                       const hasSpouseInSameGen = spouse && generation.find(m => m.id === spouse.id)
                       
@@ -1093,13 +1095,14 @@ export const FamilyTree: React.FC = () => {
                       }
                       
                       // Get children of this couple (that are in the NEXT generation only)
-                      const coupleChildren = getChildren(member.id).filter(child => {
-                        const nextGen = buildGenerations()[genIndex + 1]
+                      const allChildrenOfMember = getChildren(member.id)
+                      const coupleChildren = allChildrenOfMember.filter(child => {
+                        const nextGen = generations[genIndex + 1]
                         return nextGen && nextGen.find(m => m.id === child.id)
                       })
                       if (spouse) {
                         const spouseChildren = getChildren(spouse.id).filter(child => {
-                          const nextGen = buildGenerations()[genIndex + 1]
+                          const nextGen = generations[genIndex + 1]
                           return nextGen && nextGen.find(m => m.id === child.id)
                         })
                         spouseChildren.forEach(child => {
@@ -1107,6 +1110,16 @@ export const FamilyTree: React.FC = () => {
                             coupleChildren.push(child)
                           }
                         })
+                      }
+                      
+                      // Debug ALL couples with children
+                      if (coupleChildren.length > 0) {
+                        console.log(`Couple: ${member.firstName} ${member.lastName} + ${spouse?.firstName} ${spouse?.lastName}`)
+                        console.log(`  Children (${coupleChildren.length}):`, coupleChildren.map(c => `${c.firstName} ${c.lastName}`))
+                      } else if (allChildrenOfMember.length > 0) {
+                        console.log(`${member.firstName} ${member.lastName} has ${allChildrenOfMember.length} children but 0 in next gen`)
+                        console.log(`  All children:`, allChildrenOfMember.map(c => `${c.firstName} ${c.lastName}`))
+                        console.log(`  Next gen has:`, generations[genIndex + 1] ? generations[genIndex + 1].map(m => `${m.firstName} ${m.lastName}`).slice(0, 5) : 'NONE')
                       }
                       
                       return (
@@ -1247,7 +1260,10 @@ export const FamilyTree: React.FC = () => {
                           </div>
                           
                           {/* Connector line down if this couple has children - only if NOT first generation */}
-                          {coupleChildren.length > 0 && genIndex > 0 && (
+                          {coupleChildren.length > 0 && genIndex > 0 && (() => {
+                            console.log(`WILL RENDER ${coupleChildren.length} children for ${member.firstName}`)
+                            return true
+                          })() && (
                             <>
                               {/* Vertical line down from couple */}
                               <div className="w-0.5 h-8 bg-gray-400 mx-auto"></div>
@@ -1257,7 +1273,10 @@ export const FamilyTree: React.FC = () => {
                                   {/* Single child - just one vertical line */}
                                   <div className="w-0.5 h-8 bg-gray-400 mx-auto"></div>
                                   <div className="flex gap-12 items-start justify-center">
-                                    {coupleChildren.map((child) => {
+                                    {(() => {
+                                      console.log(`  Rendering ${coupleChildren.length} child(ren)...`)
+                                      return coupleChildren
+                                    })().map((child) => {
                                       const childSpouse = child.spouseId ? members.find(m => m.id === child.spouseId) : null
                                       // Get grandchildren (children of this child)
                                       const grandchildren = getChildren(child.id)
@@ -1269,6 +1288,9 @@ export const FamilyTree: React.FC = () => {
                                           }
                                         })
                                       }
+                                      
+                                      // Debug all children with spouse info
+                                      console.log(`  Child: ${child.firstName} ${child.lastName}, Spouse: ${childSpouse ? childSpouse.firstName + ' ' + childSpouse.lastName : 'NONE'}, Grandchildren: ${grandchildren.length}`)
                                       
                                       return (
                                       <div key={child.id} className="flex flex-col items-center">
@@ -1349,48 +1371,146 @@ export const FamilyTree: React.FC = () => {
                                           )}
                                         </div>
                                         
-                                        {/* Render grandchildren (children of this child) */}
+                                        {/* Render grandchildren (children of this child) with spouses and great-grandchildren */}
                                         {grandchildren.length > 0 && (
                                           <>
                                             <div className="w-0.5 h-8 bg-gray-400 mx-auto"></div>
                                             <div className="flex gap-12">
-                                              {grandchildren.map((grandchild) => (
-                                                <div key={grandchild.id}>
-                                                  <div
-                                                    onClick={() => setSelectedMember(grandchild)}
-                                                    className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-32"
-                                                  >
-                                                    <div className="h-20 bg-gray-100 flex items-center justify-center">
-                                                      {grandchild.profilePictureUrl ? (
-                                                        <img
-                                                          src={grandchild.profilePictureUrl}
-                                                          alt={`${grandchild.firstName} ${grandchild.lastName}`}
-                                                          className="w-16 h-16 rounded-lg object-cover"
-                                                        />
-                                                      ) : (
-                                                        <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-3xl">
-                                                          {grandchild.gender === 'male' ? '👨' : grandchild.gender === 'female' ? '👩' : '👤'}
-                                                        </div>
-                                                      )}
+                                              {grandchildren.map((grandchild) => {
+                                                const grandchildSpouse = grandchild.spouseId ? members.find(m => m.id === grandchild.spouseId) : null
+                                                const greatGrandchildren = getChildren(grandchild.id)
+                                                if (grandchildSpouse) {
+                                                  getChildren(grandchildSpouse.id).forEach(ggc => {
+                                                    if (!greatGrandchildren.find(c => c.id === ggc.id)) {
+                                                      greatGrandchildren.push(ggc)
+                                                    }
+                                                  })
+                                                }
+                                                
+                                                return (
+                                                <div key={grandchild.id} className="flex flex-col items-center">
+                                                  <div className="flex items-center gap-3">
+                                                    <div
+                                                      onClick={() => setSelectedMember(grandchild)}
+                                                      className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-32"
+                                                    >
+                                                      <div className="h-20 bg-gray-100 flex items-center justify-center">
+                                                        {grandchild.profilePictureUrl ? (
+                                                          <img
+                                                            src={grandchild.profilePictureUrl}
+                                                            alt={`${grandchild.firstName} ${grandchild.lastName}`}
+                                                            className="w-16 h-16 rounded-lg object-cover"
+                                                          />
+                                                        ) : (
+                                                          <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-3xl">
+                                                            {grandchild.gender === 'male' ? '👨' : grandchild.gender === 'female' ? '👩' : '👤'}
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                      
+                                                      <div className="p-2 text-center bg-white">
+                                                        <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                          {grandchild.firstName}
+                                                        </h3>
+                                                        <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                          {grandchild.lastName}
+                                                        </h3>
+                                                        {grandchild.dateOfBirth && (
+                                                          <p className="text-xs text-gray-500 mt-1" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                            {grandchild.dateOfBirth.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}
+                                                            {grandchild.dateOfDeath && ` - ${grandchild.dateOfDeath.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}`}
+                                                          </p>
+                                                        )}
+                                                      </div>
                                                     </div>
                                                     
-                                                    <div className="p-2 text-center bg-white">
-                                                      <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
-                                                        {grandchild.firstName}
-                                                      </h3>
-                                                      <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
-                                                        {grandchild.lastName}
-                                                      </h3>
-                                                      {grandchild.dateOfBirth && (
-                                                        <p className="text-xs text-gray-500 mt-1" style={{fontFamily: 'Poppins, sans-serif'}}>
-                                                          {grandchild.dateOfBirth.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}
-                                                          {grandchild.dateOfDeath && ` - ${grandchild.dateOfDeath.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}`}
-                                                        </p>
-                                                      )}
-                                                    </div>
+                                                    {/* Grandchild spouse */}
+                                                    {grandchildSpouse && (
+                                                      <>
+                                                        <div className="w-6 h-0.5 bg-gray-400"></div>
+                                                        <div
+                                                          onClick={() => setSelectedMember(grandchildSpouse)}
+                                                          className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-32"
+                                                        >
+                                                          <div className="h-20 bg-gray-100 flex items-center justify-center">
+                                                            {grandchildSpouse.profilePictureUrl ? (
+                                                              <img
+                                                                src={grandchildSpouse.profilePictureUrl}
+                                                                alt={`${grandchildSpouse.firstName} ${grandchildSpouse.lastName}`}
+                                                                className="w-16 h-16 rounded-lg object-cover"
+                                                              />
+                                                            ) : (
+                                                              <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-3xl">
+                                                                {grandchildSpouse.gender === 'male' ? '👨' : grandchildSpouse.gender === 'female' ? '👩' : '👤'}
+                                                              </div>
+                                                            )}
+                                                          </div>
+                                                          
+                                                          <div className="p-2 text-center bg-white">
+                                                            <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                              {grandchildSpouse.firstName}
+                                                            </h3>
+                                                            <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                              {grandchildSpouse.lastName}
+                                                            </h3>
+                                                            {grandchildSpouse.dateOfBirth && (
+                                                              <p className="text-xs text-gray-500 mt-1" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                {grandchildSpouse.dateOfBirth.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}
+                                                                {grandchildSpouse.dateOfDeath && ` - ${grandchildSpouse.dateOfDeath.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}`}
+                                                              </p>
+                                                            )}
+                                                          </div>
+                                                        </div>
+                                                      </>
+                                                    )}
                                                   </div>
+                                                  
+                                                  {/* Great-grandchildren */}
+                                                  {greatGrandchildren.length > 0 && (
+                                                    <>
+                                                      <div className="w-0.5 h-8 bg-gray-400 mx-auto"></div>
+                                                      <div className="flex gap-6">
+                                                        {greatGrandchildren.map((ggc) => (
+                                                          <div
+                                                            key={ggc.id}
+                                                            onClick={() => setSelectedMember(ggc)}
+                                                            className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-28"
+                                                          >
+                                                            <div className="h-16 bg-gray-100 flex items-center justify-center">
+                                                              {ggc.profilePictureUrl ? (
+                                                                <img
+                                                                  src={ggc.profilePictureUrl}
+                                                                  alt={`${ggc.firstName} ${ggc.lastName}`}
+                                                                  className="w-12 h-12 rounded-lg object-cover"
+                                                                />
+                                                              ) : (
+                                                                <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-2xl">
+                                                                  {ggc.gender === 'male' ? '👨' : ggc.gender === 'female' ? '👩' : '👤'}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                            
+                                                            <div className="p-1 text-center bg-white">
+                                                              <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                {ggc.firstName}
+                                                              </h3>
+                                                              <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                {ggc.lastName}
+                                                              </h3>
+                                                              {ggc.dateOfBirth && (
+                                                                <p className="text-xs text-gray-500" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                  {ggc.dateOfBirth.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}
+                                                                </p>
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        ))}
+                                                      </div>
+                                                    </>
+                                                  )}
                                                 </div>
-                                              ))}
+                                                )
+                                              })}
                                             </div>
                                           </>
                                         )}
@@ -1428,6 +1548,12 @@ export const FamilyTree: React.FC = () => {
                                         const childSpouse = child.spouseId ? members.find(m => m.id === child.spouseId) : null
                                         // Get grandchildren (children of this child)
                                         const grandchildren = getChildren(child.id)
+                                        
+                                        // Debug ALL children
+                                        console.log(`  Child in multiple branch: ${child.firstName} ${child.lastName}`)
+                                        console.log(`    spouseId: ${child.spouseId || 'NONE'}`)
+                                        console.log(`    childSpouse found: ${childSpouse ? childSpouse.firstName + ' ' + childSpouse.lastName : 'NOT FOUND'}`)
+                                        console.log(`    grandchildren: ${grandchildren.length}`)
                                         if (childSpouse) {
                                           const spouseGrandchildren = getChildren(childSpouse.id)
                                           spouseGrandchildren.forEach(gc => {
@@ -1516,48 +1642,146 @@ export const FamilyTree: React.FC = () => {
                                             )}
                                           </div>
                                           
-                                          {/* Render grandchildren (children of this child) */}
+                                          {/* Render grandchildren (children of this child) with spouses and great-grandchildren */}
                                           {grandchildren.length > 0 && (
                                             <>
                                               <div className="w-0.5 h-8 bg-gray-400 mx-auto"></div>
                                               <div className="flex gap-12">
-                                                {grandchildren.map((grandchild) => (
-                                                  <div key={grandchild.id}>
-                                                    <div
-                                                      onClick={() => setSelectedMember(grandchild)}
-                                                      className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-32"
-                                                    >
-                                                      <div className="h-20 bg-gray-100 flex items-center justify-center">
-                                                        {grandchild.profilePictureUrl ? (
-                                                          <img
-                                                            src={grandchild.profilePictureUrl}
-                                                            alt={`${grandchild.firstName} ${grandchild.lastName}`}
-                                                            className="w-16 h-16 rounded-lg object-cover"
-                                                          />
-                                                        ) : (
-                                                          <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-3xl">
-                                                            {grandchild.gender === 'male' ? '👨' : grandchild.gender === 'female' ? '👩' : '👤'}
-                                                          </div>
-                                                        )}
+                                                {grandchildren.map((grandchild) => {
+                                                  const grandchildSpouse = grandchild.spouseId ? members.find(m => m.id === grandchild.spouseId) : null
+                                                  const greatGrandchildren = getChildren(grandchild.id)
+                                                  if (grandchildSpouse) {
+                                                    getChildren(grandchildSpouse.id).forEach(ggc => {
+                                                      if (!greatGrandchildren.find(c => c.id === ggc.id)) {
+                                                        greatGrandchildren.push(ggc)
+                                                      }
+                                                    })
+                                                  }
+                                                  
+                                                  return (
+                                                  <div key={grandchild.id} className="flex flex-col items-center">
+                                                    <div className="flex items-center gap-3">
+                                                      <div
+                                                        onClick={() => setSelectedMember(grandchild)}
+                                                        className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-32"
+                                                      >
+                                                        <div className="h-20 bg-gray-100 flex items-center justify-center">
+                                                          {grandchild.profilePictureUrl ? (
+                                                            <img
+                                                              src={grandchild.profilePictureUrl}
+                                                              alt={`${grandchild.firstName} ${grandchild.lastName}`}
+                                                              className="w-16 h-16 rounded-lg object-cover"
+                                                            />
+                                                          ) : (
+                                                            <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-3xl">
+                                                              {grandchild.gender === 'male' ? '👨' : grandchild.gender === 'female' ? '👩' : '👤'}
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                        
+                                                        <div className="p-2 text-center bg-white">
+                                                          <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                            {grandchild.firstName}
+                                                          </h3>
+                                                          <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                            {grandchild.lastName}
+                                                          </h3>
+                                                          {grandchild.dateOfBirth && (
+                                                            <p className="text-xs text-gray-500 mt-1" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                              {grandchild.dateOfBirth.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}
+                                                              {grandchild.dateOfDeath && ` - ${grandchild.dateOfDeath.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}`}
+                                                            </p>
+                                                          )}
+                                                        </div>
                                                       </div>
                                                       
-                                                      <div className="p-2 text-center bg-white">
-                                                        <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
-                                                          {grandchild.firstName}
-                                                        </h3>
-                                                        <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
-                                                          {grandchild.lastName}
-                                                        </h3>
-                                                        {grandchild.dateOfBirth && (
-                                                          <p className="text-xs text-gray-500 mt-1" style={{fontFamily: 'Poppins, sans-serif'}}>
-                                                            {grandchild.dateOfBirth.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}
-                                                            {grandchild.dateOfDeath && ` - ${grandchild.dateOfDeath.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}`}
-                                                          </p>
-                                                        )}
-                                                      </div>
+                                                      {/* Grandchild spouse */}
+                                                      {grandchildSpouse && (
+                                                        <>
+                                                          <div className="w-6 h-0.5 bg-gray-400"></div>
+                                                          <div
+                                                            onClick={() => setSelectedMember(grandchildSpouse)}
+                                                            className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-32"
+                                                          >
+                                                            <div className="h-20 bg-gray-100 flex items-center justify-center">
+                                                              {grandchildSpouse.profilePictureUrl ? (
+                                                                <img
+                                                                  src={grandchildSpouse.profilePictureUrl}
+                                                                  alt={`${grandchildSpouse.firstName} ${grandchildSpouse.lastName}`}
+                                                                  className="w-16 h-16 rounded-lg object-cover"
+                                                                />
+                                                              ) : (
+                                                                <div className="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center text-3xl">
+                                                                  {grandchildSpouse.gender === 'male' ? '👨' : grandchildSpouse.gender === 'female' ? '👩' : '👤'}
+                                                                </div>
+                                                              )}
+                                                            </div>
+                                                            
+                                                            <div className="p-2 text-center bg-white">
+                                                              <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                {grandchildSpouse.firstName}
+                                                              </h3>
+                                                              <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                {grandchildSpouse.lastName}
+                                                              </h3>
+                                                              {grandchildSpouse.dateOfBirth && (
+                                                                <p className="text-xs text-gray-500 mt-1" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                  {grandchildSpouse.dateOfBirth.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}
+                                                                  {grandchildSpouse.dateOfDeath && ` - ${grandchildSpouse.dateOfDeath.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}`}
+                                                                </p>
+                                                              )}
+                                                            </div>
+                                                          </div>
+                                                        </>
+                                                      )}
                                                     </div>
+                                                    
+                                                    {/* Great-grandchildren */}
+                                                    {greatGrandchildren.length > 0 && (
+                                                      <>
+                                                        <div className="w-0.5 h-8 bg-gray-400 mx-auto"></div>
+                                                        <div className="flex gap-6">
+                                                          {greatGrandchildren.map((ggc) => (
+                                                            <div
+                                                              key={ggc.id}
+                                                              onClick={() => setSelectedMember(ggc)}
+                                                              className="bg-white rounded-xl shadow-md hover:shadow-xl border border-gray-200 overflow-hidden transition-all duration-300 cursor-pointer w-28"
+                                                            >
+                                                              <div className="h-16 bg-gray-100 flex items-center justify-center">
+                                                                {ggc.profilePictureUrl ? (
+                                                                  <img
+                                                                    src={ggc.profilePictureUrl}
+                                                                    alt={`${ggc.firstName} ${ggc.lastName}`}
+                                                                    className="w-12 h-12 rounded-lg object-cover"
+                                                                  />
+                                                                ) : (
+                                                                  <div className="w-12 h-12 rounded-lg bg-gray-200 flex items-center justify-center text-2xl">
+                                                                    {ggc.gender === 'male' ? '👨' : ggc.gender === 'female' ? '👩' : '👤'}
+                                                                  </div>
+                                                                )}
+                                                              </div>
+                                                              
+                                                              <div className="p-1 text-center bg-white">
+                                                                <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                  {ggc.firstName}
+                                                                </h3>
+                                                                <h3 className="text-xs font-bold text-gray-800 leading-tight" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                  {ggc.lastName}
+                                                                </h3>
+                                                                {ggc.dateOfBirth && (
+                                                                  <p className="text-xs text-gray-500" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                                                    {ggc.dateOfBirth.toDate().toLocaleDateString('en-US', { year: 'numeric', timeZone: 'UTC' })}
+                                                                  </p>
+                                                                )}
+                                                              </div>
+                                                            </div>
+                                                          ))}
+                                                        </div>
+                                                      </>
+                                                    )}
                                                   </div>
-                                                ))}
+                                                  )
+                                                })}
                                               </div>
                                             </>
                                           )}
@@ -1615,7 +1839,8 @@ export const FamilyTree: React.FC = () => {
                   </div>
                 </div>
                 )
-              })}
+              })
+              })()}
             </div>
           </div>
         )}
