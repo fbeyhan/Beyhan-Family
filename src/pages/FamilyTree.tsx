@@ -1884,8 +1884,7 @@ export const FamilyTree: React.FC = () => {
                 <div 
                   className="absolute inset-0 flex items-center justify-center overflow-hidden"
                   style={{
-                    cursor: 'move',
-                    touchAction: 'none'
+                    cursor: 'move'
                   }}
                   onMouseDown={(e) => {
                     const startX = e.clientX - cropPosition.x
@@ -1905,28 +1904,6 @@ export const FamilyTree: React.FC = () => {
                     
                     document.addEventListener('mousemove', handleMouseMove)
                     document.addEventListener('mouseup', handleMouseUp)
-                  }}
-                  onTouchStart={(e) => {
-                    const touch = e.touches[0]
-                    const startX = touch.clientX - cropPosition.x
-                    const startY = touch.clientY - cropPosition.y
-                    
-                    const handleTouchMove = (moveEvent: TouchEvent) => {
-                      moveEvent.preventDefault()
-                      const moveTouch = moveEvent.touches[0]
-                      setCropPosition({
-                        x: moveTouch.clientX - startX,
-                        y: moveTouch.clientY - startY
-                      })
-                    }
-                    
-                    const handleTouchEnd = () => {
-                      document.removeEventListener('touchmove', handleTouchMove)
-                      document.removeEventListener('touchend', handleTouchEnd)
-                    }
-                    
-                    document.addEventListener('touchmove', handleTouchMove, { passive: false })
-                    document.addEventListener('touchend', handleTouchEnd)
                   }}
                 >
                   <img
