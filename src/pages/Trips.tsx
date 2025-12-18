@@ -122,10 +122,14 @@ export const Trips: React.FC = () => {
       }
 
       if (tripForm.startDate) {
-        tripData.startDate = Timestamp.fromDate(new Date(tripForm.startDate))
+        // Store date without timezone conversion
+        const [year, month, day] = tripForm.startDate.split('-').map(Number)
+        tripData.startDate = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
       }
       if (tripForm.endDate) {
-        tripData.endDate = Timestamp.fromDate(new Date(tripForm.endDate))
+        // Store date without timezone conversion
+        const [year, month, day] = tripForm.endDate.split('-').map(Number)
+        tripData.endDate = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
       }
 
       console.log('Attempting to add trip with data:', tripData)
@@ -165,10 +169,14 @@ export const Trips: React.FC = () => {
       }
 
       if (tripForm.startDate) {
-        updateData.startDate = Timestamp.fromDate(new Date(tripForm.startDate))
+        // Store date without timezone conversion
+        const [year, month, day] = tripForm.startDate.split('-').map(Number)
+        updateData.startDate = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
       }
       if (tripForm.endDate) {
-        updateData.endDate = Timestamp.fromDate(new Date(tripForm.endDate))
+        // Store date without timezone conversion
+        const [year, month, day] = tripForm.endDate.split('-').map(Number)
+        updateData.endDate = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
       }
 
       await updateDoc(doc(db, 'familyTrips', editingTrip.id), updateData)
@@ -196,8 +204,20 @@ export const Trips: React.FC = () => {
       title: trip.title,
       location: trip.location,
       emoji: trip.emoji,
-      startDate: trip.startDate ? new Date(trip.startDate.toMillis()).toISOString().split('T')[0] : '',
-      endDate: trip.endDate ? new Date(trip.endDate.toMillis()).toISOString().split('T')[0] : '',
+      startDate: trip.startDate ? (() => {
+        const date = trip.startDate.toDate()
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      })() : '',
+      endDate: trip.endDate ? (() => {
+        const date = trip.endDate.toDate()
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      })() : '',
       description: trip.description || ''
     })
     setShowAddTrip(false)

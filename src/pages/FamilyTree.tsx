@@ -101,10 +101,14 @@ export const FamilyTree: React.FC = () => {
         memberData.displayOrder = memberForm.displayOrder
       }
       if (memberForm.dateOfBirth) {
-        memberData.dateOfBirth = Timestamp.fromDate(new Date(memberForm.dateOfBirth))
+        // Store date without timezone conversion
+        const [year, month, day] = memberForm.dateOfBirth.split('-').map(Number)
+        memberData.dateOfBirth = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
       }
       if (memberForm.dateOfDeath) {
-        memberData.dateOfDeath = Timestamp.fromDate(new Date(memberForm.dateOfDeath))
+        // Store date without timezone conversion
+        const [year, month, day] = memberForm.dateOfDeath.split('-').map(Number)
+        memberData.dateOfDeath = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
       }
       if (memberForm.profilePictureUrl) {
         memberData.profilePictureUrl = memberForm.profilePictureUrl
@@ -144,10 +148,14 @@ export const FamilyTree: React.FC = () => {
         updateData.displayOrder = memberForm.displayOrder
       }
       if (memberForm.dateOfBirth) {
-        updateData.dateOfBirth = Timestamp.fromDate(new Date(memberForm.dateOfBirth))
+        // Store date without timezone conversion
+        const [year, month, day] = memberForm.dateOfBirth.split('-').map(Number)
+        updateData.dateOfBirth = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
       }
       if (memberForm.dateOfDeath) {
-        updateData.dateOfDeath = Timestamp.fromDate(new Date(memberForm.dateOfDeath))
+        // Store date without timezone conversion
+        const [year, month, day] = memberForm.dateOfDeath.split('-').map(Number)
+        updateData.dateOfDeath = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
       }
       if (memberForm.profilePictureUrl) {
         updateData.profilePictureUrl = memberForm.profilePictureUrl
@@ -193,7 +201,13 @@ export const FamilyTree: React.FC = () => {
     setMemberForm({
       firstName: member.firstName,
       lastName: member.lastName,
-      dateOfBirth: member.dateOfBirth ? new Date(member.dateOfBirth.toMillis()).toISOString().split('T')[0] : '',
+      dateOfBirth: member.dateOfBirth ? (() => {
+        const date = member.dateOfBirth.toDate()
+        const year = date.getFullYear()
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const day = String(date.getDate()).padStart(2, '0')
+        return `${year}-${month}-${day}`
+      })() : '',
       placeOfBirth: member.placeOfBirth || '',
       gender: member.gender || 'other',
       parentIds: member.parentIds || [],
@@ -664,36 +678,36 @@ export const FamilyTree: React.FC = () => {
           <Link to="/dashboard" className="inline-flex items-center text-green-600 hover:text-green-700 font-semibold mb-3 transition-colors" style={{fontFamily: 'Poppins, sans-serif'}}>
             ← Back to Dashboard
           </Link>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <span className="text-4xl">🌳</span>
-              <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-600" style={{fontFamily: 'Poppins, sans-serif'}}>
+              <span className="text-3xl sm:text-4xl">🌳</span>
+              <h1 className="text-2xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-teal-600" style={{fontFamily: 'Poppins, sans-serif'}}>
                 Family Tree
               </h1>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <div className="flex bg-gray-200 rounded-xl p-1">
                 <button
                   onClick={() => setViewMode('tree')}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
+                  className={`px-2 sm:px-4 py-2 rounded-lg font-semibold transition-all text-xs sm:text-sm ${
                     viewMode === 'tree' 
                       ? 'bg-white text-green-600 shadow' 
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                   style={{fontFamily: 'Poppins, sans-serif'}}
                 >
-                  🌳 Tree
+                  🌳 <span className="hidden xs:inline">Tree</span>
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`px-4 py-2 rounded-lg font-semibold transition-all text-sm ${
+                  className={`px-2 sm:px-4 py-2 rounded-lg font-semibold transition-all text-xs sm:text-sm ${
                     viewMode === 'list' 
                       ? 'bg-white text-green-600 shadow' 
                       : 'text-gray-600 hover:text-gray-800'
                   }`}
                   style={{fontFamily: 'Poppins, sans-serif'}}
                 >
-                  📋 List
+                  📋 <span className="hidden xs:inline">List</span>
                 </button>
               </div>
               <button
@@ -702,10 +716,10 @@ export const FamilyTree: React.FC = () => {
                   setEditingMember(null)
                   resetForm()
                 }}
-                className="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300"
+                className="flex-1 sm:flex-none px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-300 text-xs sm:text-base whitespace-nowrap"
                 style={{fontFamily: 'Poppins, sans-serif'}}
               >
-                ➕ Add Family Member
+                ➕ Add Member
               </button>
             </div>
           </div>
@@ -1870,7 +1884,8 @@ export const FamilyTree: React.FC = () => {
                 <div 
                   className="absolute inset-0 flex items-center justify-center overflow-hidden"
                   style={{
-                    cursor: 'move'
+                    cursor: 'move',
+                    touchAction: 'none'
                   }}
                   onMouseDown={(e) => {
                     const startX = e.clientX - cropPosition.x
@@ -1890,6 +1905,28 @@ export const FamilyTree: React.FC = () => {
                     
                     document.addEventListener('mousemove', handleMouseMove)
                     document.addEventListener('mouseup', handleMouseUp)
+                  }}
+                  onTouchStart={(e) => {
+                    const touch = e.touches[0]
+                    const startX = touch.clientX - cropPosition.x
+                    const startY = touch.clientY - cropPosition.y
+                    
+                    const handleTouchMove = (moveEvent: TouchEvent) => {
+                      moveEvent.preventDefault()
+                      const moveTouch = moveEvent.touches[0]
+                      setCropPosition({
+                        x: moveTouch.clientX - startX,
+                        y: moveTouch.clientY - startY
+                      })
+                    }
+                    
+                    const handleTouchEnd = () => {
+                      document.removeEventListener('touchmove', handleTouchMove)
+                      document.removeEventListener('touchend', handleTouchEnd)
+                    }
+                    
+                    document.addEventListener('touchmove', handleTouchMove, { passive: false })
+                    document.addEventListener('touchend', handleTouchEnd)
                   }}
                 >
                   <img
