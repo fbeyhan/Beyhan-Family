@@ -19,9 +19,10 @@ A modern, secure family website built with React, TypeScript, Firebase Authentic
 - **TypeScript** - Type-safe JavaScript for better developer experience
 - **Vite** - Lightning-fast build tool and dev server
 - **Tailwind CSS** - Utility-first CSS framework for rapid styling
-- **Firebase Authentication** - Secure user authentication
+- **Firebase** - Authentication, Firestore database, and Storage
 - **React Router** - Client-side routing
-- **Cypress** - End-to-end testing framework
+- **Cypress 12** - End-to-end testing framework with TypeScript support
+- **GitHub Pages** - Deployment platform with automated CI/CD
 
 ---
 
@@ -134,9 +135,28 @@ npx cypress open
 ```
 
 **Cypress folder structure:**
-- `cypress/e2e/` - Contains end-to-end test files
+- `cypress/e2e/` - Contains end-to-end test files (TypeScript)
 - `cypress/support/` - Custom commands and configuration
+- `cypress/support/pages/` - Page Object Model classes
+- `cypress/support/helpers/` - Test helper utilities
 - `cypress/fixtures/` - Test data files
+
+**Page Object Model (POM) Implementation:**
+This project uses the Page Object Model pattern for maintainable, scalable test automation:
+- **BasePage.ts** - Foundation class with common methods for all pages
+- **LoginPage.ts** - Login page interactions and validations
+- **DashboardPage.ts** - Dashboard navigation and element interactions
+- **FamilyTreePage.ts** - Family tree page objects and actions
+- **TripsPage.ts** - Trips page interactions
+- **FamilyPicturesPage.ts** - Family pictures gallery interactions
+- **ChangePasswordPage.ts** - Password change form interactions
+- **auth.helper.ts** - Reusable authentication helper functions
+
+Each page object encapsulates:
+- Element selectors (locators)
+- Page-specific actions
+- Validation methods
+- Navigation logic
 
 ---
 
@@ -266,20 +286,40 @@ export const ProtectedRoute: React.FC<{ children: ReactNode }> = ({ children }) 
 - **Protected:** Requires authentication
 
 **File: `src/pages/Trips.tsx`**
-- **Purpose:** Display family trip information and memories
+- **Purpose:** Manage and display family trip information and memories
 - **Tied to:** `/trips` route
 - **Features:**
-  - Trip cards with dates, locations, descriptions
-  - Back to dashboard button
+  - Add/edit/delete trip entries
+  - Trip photo uploads (multiple images per trip)
+  - Firebase Firestore for trip data
+  - Firebase Storage for trip photos
+  - Date range picker (start/end dates)
+  - Location tracking
+  - Descriptions and highlights
+  - Photo gallery for each trip
+  - Timezone-consistent date handling
+  - Responsive card layout
 - **Protected:** Requires authentication
 
 **File: `src/pages/FamilyTree.tsx`**
-- **Purpose:** Visual representation of family relationships
+- **Purpose:** Comprehensive family tree management with CRUD operations
 - **Tied to:** `/family-tree` route
 - **Features:**
-  - Family member cards
-  - Relationship visualization
-  - Back to dashboard button
+  - Add/edit/delete family members with full details
+  - Profile picture upload with circular crop tool
+  - Firebase Firestore integration for data persistence
+  - Firebase Storage for profile photos
+  - View modes: Tree visualization and list view
+  - Duplicate detection system
+  - Relationship tracking (parents, spouses)
+  - Biography and life events (birth, death dates)
+  - Responsive mobile design
+  - Timezone-consistent date handling
+- **Technical Details:**
+  - Real-time data sync with Firestore
+  - Image optimization and cropping
+  - Form validation
+  - Loading states and error handling
 - **Protected:** Requires authentication
 
 **File: `src/pages/ChangePassword.tsx`**
@@ -333,25 +373,93 @@ export const ProtectedRoute: React.FC<{ children: ReactNode }> = ({ children }) 
 
 ---
 
-### Phase 4: Testing Setup
+### Phase 4: Testing Setup with Page Object Model
 
-**File: `cypress/e2e/home.cy.js`**
-- **Purpose:** End-to-end test for homepage functionality
-- **Tests:**
-  - Page loads successfully
-  - Login form is visible
-  - User can log in
-  - Navigation works correctly
+**Test Architecture:**
+This project implements a comprehensive E2E testing strategy using Cypress with TypeScript and the Page Object Model pattern for better maintainability and scalability.
 
-**File: `cypress/support/commands.js`**
-- **Purpose:** Custom Cypress commands for reusable test actions
-- **Example:** `cy.login()` command for authenticating in tests
+**File: `cypress/support/pages/BasePage.ts`**
+- **Purpose:** Foundation class providing common methods for all page objects
+- **Key Methods:**
+  - `visit(path)` - Navigate to a specific page
+  - `getElement(selector)` - Find elements with wait strategy
+  - `clickByText(text)` - Click elements containing specific text
+  - `verifyElementExists(selector)` - Assert element presence
+  - `clearStorage()` - Clean localStorage/sessionStorage
+  - `autoConfirmDialog()` - Auto-accept browser dialogs
+
+**Individual Page Objects:**
+
+**`cypress/support/pages/LoginPage.ts`**
+- Email/password input methods
+- Login form submission
+- Error message validation
+- Success navigation verification
+
+**`cypress/support/pages/DashboardPage.ts`**
+- Navigation to different sections (Trips, Family Tree, Family Pictures)
+- Change password link interaction
+- Logout functionality
+- Dashboard element verification
+
+**`cypress/support/pages/FamilyTreePage.ts`**
+- Add family member workflow
+- Profile photo upload
+- Form field interactions
+- View mode switching (tree/list)
+- Member card validation
+
+**`cypress/support/pages/TripsPage.ts`**
+- Add new trip functionality
+- Trip photo upload
+- Date picker interactions
+- Trip card validation
+
+**`cypress/support/pages/FamilyPicturesPage.ts`**
+- Photo upload functionality
+- Gallery view validation
+- Photo management operations
+
+**`cypress/support/pages/ChangePasswordPage.ts`**
+- Current password input
+- New password validation
+- Password confirmation
+- Success/error message handling
+
+**File: `cypress/support/helpers/auth.helper.ts`**
+- **Purpose:** Reusable authentication utilities
+- **Functions:**
+  - `loginViaUI()` - Full login workflow through UI
+  - `clearAuth()` - Clean authentication state
+  - Helper functions for common auth operations
+
+**Test Files (TypeScript):**
+- `cypress/e2e/login.cy.ts` - Login functionality tests
+- `cypress/e2e/dashboard.cy.ts` - Dashboard navigation tests
+- `cypress/e2e/familyTree.cy.ts` - Family tree CRUD operations
+- `cypress/e2e/trips.cy.ts` - Trips management tests
+- `cypress/e2e/familyPictures.cy.ts` - Photo gallery tests
+- `cypress/e2e/changePassword.cy.ts` - Password change tests
+
+**Test Coverage:**
+- ✅ Authentication flows (login, logout, session management)
+- ✅ Protected route access control
+- ✅ Form validations and error handling
+- ✅ Navigation between pages
+- ✅ CRUD operations for family data
+- ✅ File uploads (photos, profile pictures)
+- ✅ Responsive design elements
+- ✅ Date handling and timezone consistency
 
 **Running tests:**
 ```bash
-npm run cypress:open    # Interactive mode with GUI
-npm run cypress:run     # Headless mode for CI/CD
+npm run cypress:open              # Interactive mode with GUI
+npm run cypress:run               # Headless mode for CI/CD
+npx cypress run --spec "cypress/e2e/login.cy.ts"  # Run specific test
 ```
+
+**CI/CD Integration:**
+Tests run automatically on every push via GitHub Actions before deployment.
 
 ---
 
@@ -458,66 +566,134 @@ npm run cypress:open
 
 ```
 beyhan-family/
+├── .github/
+│   └── workflows/
+│       └── deploy.yml           # GitHub Actions CI/CD pipeline
 ├── public/               # Static assets
-│   └── _redirects       # Netlify redirects for SPA routing
+│   └── _redirects       # SPA routing redirects
 ├── src/
 │   ├── components/      # Reusable components
 │   │   └── ProtectedRoute.tsx    # Auth guard for private routes
 │   ├── config/          # Configuration files
-│   │   └── firebase.ts           # Firebase initialization
+│   │   └── firebase.ts           # Firebase initialization (Auth, Firestore, Storage)
 │   ├── context/         # React Context providers
 │   │   └── AuthContext.tsx       # Authentication state management
 │   ├── pages/           # Page components
 │   │   ├── Login.tsx             # Login page (/)
 │   │   ├── Dashboard.tsx         # Main dashboard (/dashboard)
 │   │   ├── FamilyPictures.tsx    # Photo gallery (/family-pictures)
-│   │   ├── Trips.tsx             # Family trips (/trips)
-│   │   ├── FamilyTree.tsx        # Family tree (/family-tree)
+│   │   ├── Trips.tsx             # Family trips with photos (/trips)
+│   │   ├── FamilyTree.tsx        # Family tree CRUD (/family-tree)
 │   │   └── ChangePassword.tsx    # Password change (/change-password)
+│   ├── utils/           # Utility functions
+│   │   └── checkDuplicates.ts    # Duplicate detection logic
 │   ├── App.tsx          # Root component with routing
 │   ├── main.tsx         # Application entry point
 │   └── styles.css       # Global styles with Tailwind
-├── cypress/             # E2E tests
-│   ├── e2e/
-│   │   └── home.cy.js   # Homepage tests
-│   └── support/         # Cypress configuration
+├── cypress/             # E2E tests (TypeScript)
+│   ├── e2e/             # Test files
+│   │   ├── login.cy.ts           # Login tests
+│   │   ├── dashboard.cy.ts       # Dashboard tests
+│   │   ├── familyTree.cy.ts      # Family tree tests
+│   │   ├── trips.cy.ts           # Trips tests
+│   │   ├── familyPictures.cy.ts  # Photo gallery tests
+│   │   └── changePassword.cy.ts  # Password change tests
+│   ├── support/         # Cypress configuration
+│   │   ├── pages/       # Page Object Model
+│   │   │   ├── BasePage.ts          # Base page class
+│   │   │   ├── LoginPage.ts         # Login page object
+│   │   │   ├── DashboardPage.ts     # Dashboard page object
+│   │   │   ├── FamilyTreePage.ts    # Family tree page object
+│   │   │   ├── TripsPage.ts         # Trips page object
+│   │   │   ├── FamilyPicturesPage.ts# Pictures page object
+│   │   │   └── ChangePasswordPage.ts# Password page object
+│   │   ├── helpers/
+│   │   │   └── auth.helper.ts    # Auth helper functions
+│   │   ├── commands.js           # Custom Cypress commands
+│   │   ├── e2e.js               # E2E configuration
+│   │   └── index.ts             # Central export file
+│   ├── fixtures/        # Test data files
+│   ├── downloads/       # Test download directory
+│   ├── screenshots/     # Failed test screenshots
+│   ├── videos/          # Test execution recordings
+│   └── tsconfig.json    # TypeScript config for Cypress
 ├── index.html           # HTML entry point
 ├── package.json         # Dependencies and scripts
 ├── tsconfig.json        # TypeScript configuration
 ├── vite.config.ts       # Vite build configuration
 ├── tailwind.config.cjs  # Tailwind CSS configuration
-└── cypress.config.js    # Cypress test configuration
+├── postcss.config.cjs   # PostCSS configuration
+├── cypress.config.js    # Cypress test configuration
+├── CNAME                # Custom domain configuration
+├── DEPLOYMENT.md        # Deployment documentation
+├── FIREBASE_SETUP.md    # Firebase setup guide
+└── FIRESTORE_RULES.md   # Firestore security rules
 ```
 
 ---
 
 ## Features
 
-### Authentication
+### Authentication & Security
 - ✅ Firebase email/password authentication
-- ✅ Protected routes requiring login
+- ✅ Protected routes with automatic redirect to login
 - ✅ Auto-logout after 20 minutes of inactivity
-- ✅ Password change functionality
+- ✅ Password change functionality with validation
 - ✅ Persistent sessions across page refreshes
+- ✅ Firestore security rules for data protection
 
 ### User Interface
-- ✅ Responsive design (mobile, tablet, desktop)
-- ✅ Modern gradient color schemes
+- ✅ Fully responsive design (mobile, tablet, desktop)
+- ✅ Modern gradient color schemes with Tailwind CSS
 - ✅ Smooth animations and transitions
-- ✅ Clean, intuitive navigation
+- ✅ Clean, intuitive navigation with breadcrumbs
+- ✅ Mobile-optimized header and buttons
+- ✅ Touch-friendly interactions
 
-### Pages
-- **Login** - Secure authentication entry point
-- **Dashboard** - Central hub with navigation cards
-- **Family Pictures** - Photo gallery for family memories
-- **Trips** - Document family travel experiences
-- **Family Tree** - Visual family relationships
-- **Change Password** - Update credentials securely
+### Family Tree Management
+- ✅ Add/edit/delete family members
+- ✅ Profile photo upload with circular crop tool
+- ✅ Parent-child relationship tracking
+- ✅ Spouse relationships
+- ✅ Birth/death date tracking with timezone handling
+- ✅ Biography and life events
+- ✅ Place of birth information
+- ✅ Gender selection
+- ✅ Display order customization
+- ✅ Duplicate member detection
+- ✅ Tree view and list view modes
+- ✅ Real-time data synchronization
 
-### Security Features
-- Protected routes that redirect to login if not authenticated
-- Inactivity timeout (20 minutes)
-- Firebase Authentication with secure token management
+### Trips Management
+- ✅ Add/edit/delete trip entries
+- ✅ Multiple photo uploads per trip
+- ✅ Date range tracking (start/end dates)
+- ✅ Location information
+- ✅ Trip descriptions and highlights
+- ✅ Photo gallery with Firebase Storage
+- ✅ Timezone-consistent date handling
+
+### Family Pictures Gallery
+- ✅ Photo upload and management
+- ✅ Grid layout gallery view
+- ✅ Firebase Storage integration
+- ✅ Image optimization
+
+### Testing & Quality Assurance
+- ✅ Comprehensive E2E test suite with Cypress
+- ✅ Page Object Model pattern for maintainable tests
+- ✅ TypeScript support in tests
+- ✅ Automated CI/CD testing before deployment
+- ✅ 24+ passing tests across all features
+- ✅ Screenshot and video recording on failures
+
+### Deployment & DevOps
+- ✅ GitHub Actions CI/CD pipeline
+- ✅ Automated testing on every commit
+- ✅ GitHub Pages hosting
+- ✅ Custom domain support (beyhanfamily.com)
+- ✅ Environment variable management
+- ✅ Production build optimization
 
 ---
 
@@ -535,11 +711,41 @@ npm run preview          # Preview production build locally
 ```
 
 ### Running Tests
+
+**Interactive Mode (with GUI):**
 ```bash
-npm run cypress:open     # Interactive test runner
-npm run cypress:run      # Headless tests for CI
-npm run test:e2e         # Build + test production build
+npm run cypress:open
+# Opens Cypress Test Runner
+# Click on test files to run individually
+# Great for debugging and development
 ```
+
+**Headless Mode (for CI/CD):**
+```bash
+npm run cypress:run
+# Runs all tests in terminal
+# Generates screenshots on failure
+# Records videos of test execution
+# Used in GitHub Actions
+```
+
+**Run Specific Test File:**
+```bash
+npx cypress run --spec "cypress/e2e/login.cy.ts"
+npx cypress run --spec "cypress/e2e/familyTree.cy.ts"
+```
+
+**Test with Production Build:**
+```bash
+npm run build
+npx vite preview --port 5174
+npx cypress run --config baseUrl=http://localhost:5174
+```
+
+**Test Results:**
+- Screenshots: `cypress/screenshots/`
+- Videos: `cypress/videos/`
+- Logs: Console output during test run
 
 ### Code Quality
 ```bash
@@ -551,51 +757,103 @@ npm run format           # Format code with Prettier
 
 ## Deployment
 
-### GitHub Pages (via GitHub Actions)
+### GitHub Pages (Current Deployment Method)
 
-This repository includes automatic deployment to GitHub Pages:
+This repository uses GitHub Actions for automated CI/CD deployment to GitHub Pages.
 
-1. **Setup GitHub repository:**
-```bash
-git remote add origin <your-repo-url>
-git branch -M main
-git add .
-git commit -m "Initial commit"
-git push -u origin main
+**Workflow Pipeline (`.github/workflows/deploy.yml`):**
+
+1. **Test Job:**
+   - Runs on every push to `main` branch
+   - Installs dependencies (`npm ci`)
+   - Builds the project for preview
+   - Starts preview server on port 5174
+   - Runs full Cypress E2E test suite
+   - Uses Firebase environment variables from GitHub Secrets
+   - Blocks deployment if tests fail
+
+2. **Build Job (after tests pass):**
+   - Builds production-optimized bundle
+   - Uses Firebase environment variables
+   - Creates artifacts ready for deployment
+
+3. **Deploy Job:**
+   - Uploads build artifacts to GitHub Pages
+   - Deploys to custom domain: `beyhanfamily.com`
+
+**Required GitHub Secrets:**
+Add these in repository Settings → Secrets and variables → Actions:
+```
+VITE_FIREBASE_API_KEY
+VITE_FIREBASE_AUTH_DOMAIN
+VITE_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET
+VITE_FIREBASE_MESSAGING_SENDER_ID
+VITE_FIREBASE_APP_ID
 ```
 
-2. **GitHub Actions automatically:**
-   - Runs on every push to `main` branch
-   - Builds the project (`npm run build`)
-   - Deploys `dist/` folder to GitHub Pages
-   - Workflow file: `.github/workflows/deploy.yml`
+**GitHub Pages Configuration:**
+1. Go to repository Settings → Pages
+2. Source: Select "GitHub Actions"
+3. Custom domain: Add `beyhanfamily.com` (if applicable)
+4. Enforce HTTPS: Check this option after DNS verification
 
-3. **Enable GitHub Pages:**
-   - Go to repository Settings → Pages
-   - Source: Deploy from a branch
-   - Branch: `gh-pages` / root
+**DNS Configuration for Custom Domain (Namecheap):**
+```
+Type: A Record    | Host: @    | Value: 185.199.108.153
+Type: A Record    | Host: @    | Value: 185.199.109.153
+Type: A Record    | Host: @    | Value: 185.199.110.153
+Type: A Record    | Host: @    | Value: 185.199.111.153
+Type: CNAME       | Host: www  | Value: <username>.github.io
+```
 
-Your site will be live at: `https://<username>.github.io/<repo-name>/`
+**Deployment Trigger:**
+```bash
+git add .
+git commit -m "Your commit message"
+git push origin main
+```
 
-### Alternative: Netlify
+The workflow automatically:
+- ✅ Runs all Cypress tests
+- ✅ Builds production bundle
+- ✅ Deploys to GitHub Pages
+- ✅ Updates live site (3-5 minutes)
 
-1. **Create `public/_redirects` file** (already included):
+**Deployment URL:**
+- Production: `https://beyhanfamily.com`
+- GitHub Pages: `https://<username>.github.io/Beyhan-Family/`
+
+### Monitoring Deployments
+
+View deployment status:
+- GitHub Actions tab in repository
+- Check workflow runs for success/failure
+- View test results and logs
+- Download test artifacts (screenshots, videos)
+
+### Alternative Deployment: Netlify
+
+1. **Connect repository to Netlify:**
+   - Build command: `npm run build`
+   - Publish directory: `dist`
+   - Add environment variables in Netlify dashboard
+
+2. **Required `public/_redirects` file** (already included):
 ```
 /*    /index.html   200
 ```
 
-2. **Deploy:**
-   - Connect your GitHub repo to Netlify
-   - Build command: `npm run build`
-   - Publish directory: `dist`
-   - Netlify automatically deploys on git push
+3. **Auto-deploy on git push**
 
-### Alternative: Vercel
+### Alternative Deployment: Vercel
 
 ```bash
 npm install -g vercel
 vercel --prod
 ```
+
+Add environment variables in Vercel project settings.
 
 ---
 
@@ -645,21 +903,51 @@ vercel --prod
 
 ## Environment Variables
 
-Create `.env` file for local development:
+### Local Development
+
+Create `.env` file in project root:
 
 ```env
 # Firebase Configuration
 VITE_FIREBASE_API_KEY=your_api_key
 VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=your_project_id
-VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_STORAGE_BUCKET=your_project.firebasestorage.app
 VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
 VITE_FIREBASE_APP_ID=your_app_id
 ```
 
-**For deployment platforms:**
-- GitHub Actions: Add as repository secrets
-- Netlify/Vercel: Add in environment variables settings
+**Important:** Add `.env` to `.gitignore` to prevent committing secrets.
+
+### Production Deployment
+
+**GitHub Actions (Current Setup):**
+1. Go to repository Settings → Secrets and variables → Actions
+2. Add each environment variable as a repository secret:
+   - `VITE_FIREBASE_API_KEY`
+   - `VITE_FIREBASE_AUTH_DOMAIN`
+   - `VITE_FIREBASE_PROJECT_ID`
+   - `VITE_FIREBASE_STORAGE_BUCKET`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+   - `VITE_FIREBASE_APP_ID`
+
+The workflow file (`.github/workflows/deploy.yml`) automatically injects these during build and test jobs.
+
+**Netlify:**
+- Dashboard → Site settings → Environment variables
+- Add all six Firebase variables
+
+**Vercel:**
+- Project settings → Environment Variables
+- Add all six Firebase variables
+- Select production, preview, and development environments
+
+### Firebase Configuration
+
+Get these values from:
+1. Firebase Console → Project Settings
+2. Your apps → Web app
+3. Firebase configuration object
 
 ---
 
@@ -674,9 +962,11 @@ npm run dev -- --port 3000
 ```
 
 ### Firebase authentication errors
-- Verify environment variables are set correctly
-- Check Firebase console for enabled authentication methods
-- Ensure Firebase project allows your domain
+- ✅ Verify `.env` file exists with correct values
+- ✅ Check Firebase console → Authentication → Sign-in methods
+- ✅ Ensure Email/Password provider is enabled
+- ✅ Verify authorized domains include localhost and production domain
+- ✅ Check browser console for specific Firebase error codes
 
 ### Build errors
 ```bash
@@ -693,16 +983,181 @@ npm run build
 npm install -D @types/react @types/react-dom
 ```
 
+### Cypress test failures
+
+**Tests fail with "baseUrl" error:**
+```bash
+# Ensure dev server is running before tests
+npm run dev
+# In another terminal
+npm run cypress:open
+```
+
+**Tests fail in CI but pass locally:**
+- Check GitHub Secrets are properly configured
+- Verify environment variables in workflow file
+- Review GitHub Actions logs for specific errors
+
+**Element not found errors:**
+- Selectors may have changed - update page objects
+- Increase wait times for slow-loading elements
+- Check for responsive design breakpoint changes
+
+### Firestore permission denied errors
+- Review Firestore security rules
+- Ensure user is authenticated before database operations
+- Check `createdBy` field matches current user
+- See `FIRESTORE_RULES.md` for complete rules documentation
+
+### Date timezone issues
+**Problem:** Dates shift by one day for different timezones
+
+**Solution:** Store dates at noon (12:00:00) instead of midnight
+```typescript
+// Correct way to store dates
+const date = new Date(year, month - 1, day, 12, 0, 0)
+Timestamp.fromDate(date)
+```
+
+### GitHub Actions deployment failures
+1. Check Actions tab for error logs
+2. Verify all required secrets are added
+3. Ensure Cypress tests are passing locally
+4. Check GitHub Pages is enabled in settings
+5. Review workflow file syntax
+
+### Mobile responsive issues
+- Test on actual devices, not just browser DevTools
+- Check touch event handlers for mobile interactions
+- Verify responsive Tailwind classes (`sm:`, `md:`, `lg:`)
+- Test photo upload and cropping on mobile browsers
+
 ---
+
+## Key Technical Implementations
+
+### Page Object Model Pattern
+This project demonstrates industry-standard test automation architecture:
+- **Separation of Concerns:** Test logic separated from page structure
+- **Reusability:** Common methods in BasePage inherited by all page objects
+- **Maintainability:** Locator changes only require updates in page objects, not tests
+- **Scalability:** Easy to add new pages and tests following established patterns
+
+### Firebase Integration
+- **Authentication:** Email/password with secure token management
+- **Firestore:** NoSQL database for family members and trips data
+- **Storage:** Cloud storage for profile pictures and trip photos
+- **Security Rules:** Server-side validation and access control
+
+### Responsive Design Strategy
+- **Mobile-First Approach:** Base styles for mobile, enhanced for desktop
+- **Breakpoints:** `sm:` (640px), `md:` (768px), `lg:` (1024px), `xl:` (1280px)
+- **Touch-Friendly:** Adequate button sizes and spacing for mobile
+- **Adaptive Layouts:** Flex/grid layouts that reflow based on screen size
+
+### Date Handling Best Practice
+**Problem:** Users in different timezones see dates shift by one day
+
+**Solution:** Store dates at noon (12:00:00 UTC) instead of midnight
+```typescript
+// ✅ Correct: Noon ensures date stays consistent across timezones
+const dateOfBirth = new Date(year, month - 1, day, 12, 0, 0)
+await updateDoc(memberRef, {
+  dateOfBirth: Timestamp.fromDate(dateOfBirth)
+})
+
+// ❌ Wrong: Midnight can shift to previous/next day in different timezones
+const dateOfBirth = new Date(year, month - 1, day)
+```
+
+### CI/CD Pipeline
+**Continuous Integration:**
+- Every commit triggers automated tests
+- Build verification before deployment
+- Environment-specific configurations
+
+**Continuous Deployment:**
+- Automatic deployment on successful test runs
+- Production environment updates within minutes
+- Rollback capability via Git history
 
 ## Learning Resources
 
-- **React:** [react.dev](https://react.dev)
-- **TypeScript:** [typescriptlang.org](https://www.typescriptlang.org)
-- **Vite:** [vitejs.dev](https://vitejs.dev)
-- **Tailwind CSS:** [tailwindcss.com](https://tailwindcss.com)
-- **Firebase:** [firebase.google.com](https://firebase.google.com)
-- **Cypress:** [cypress.io](https://www.cypress.io)
+### Core Technologies
+- **React:** [react.dev](https://react.dev) - Official React documentation
+- **TypeScript:** [typescriptlang.org](https://www.typescriptlang.org) - TypeScript handbook
+- **Vite:** [vitejs.dev](https://vitejs.dev) - Next generation frontend tooling
+- **Tailwind CSS:** [tailwindcss.com](https://tailwindcss.com) - Utility-first CSS framework
+
+### Firebase
+- **Firebase Docs:** [firebase.google.com/docs](https://firebase.google.com/docs)
+- **Firestore:** [firebase.google.com/docs/firestore](https://firebase.google.com/docs/firestore)
+- **Authentication:** [firebase.google.com/docs/auth](https://firebase.google.com/docs/auth)
+- **Storage:** [firebase.google.com/docs/storage](https://firebase.google.com/docs/storage)
+
+### Testing
+- **Cypress:** [cypress.io](https://www.cypress.io) - E2E testing framework
+- **Cypress Best Practices:** [docs.cypress.io/guides/references/best-practices](https://docs.cypress.io/guides/references/best-practices)
+- **Page Object Model:** [martinfowler.com/bliki/PageObject.html](https://martinfowler.com/bliki/PageObject.html)
+
+### DevOps
+- **GitHub Actions:** [docs.github.com/en/actions](https://docs.github.com/en/actions)
+- **GitHub Pages:** [docs.github.com/en/pages](https://docs.github.com/en/pages)
+
+---
+
+## Project Statistics
+
+- **Total Test Files:** 6 (TypeScript)
+- **Page Objects:** 7 (including BasePage)
+- **Test Cases:** 24+ passing tests
+- **Code Coverage:** Authentication, CRUD operations, navigation, file uploads
+- **Lines of Code:** 2,300+ in main application
+- **Dependencies:** 20+ npm packages
+- **Build Time:** ~15 seconds
+- **Deployment Time:** 3-5 minutes (including tests)
+
+---
+
+## Future Enhancements
+
+Potential features for future development:
+- [ ] Advanced family tree visualization (D3.js or similar)
+- [ ] Search and filter functionality for family members
+- [ ] Export family tree data (PDF, JSON)
+- [ ] Photo tagging with family member recognition
+- [ ] Event calendar for birthdays and anniversaries
+- [ ] Notifications for upcoming family events
+- [ ] Multi-language support
+- [ ] Dark mode theme
+- [ ] Progressive Web App (PWA) capabilities
+- [ ] Social sharing features
+- [ ] Family member comments and stories
+- [ ] DNA test integration
+- [ ] Historical timeline view
+- [ ] Family statistics and analytics
+
+---
+
+## Contributing
+
+This is a private family project. For family members interested in contributing:
+
+1. Contact the repository owner for access
+2. Clone the repository
+3. Create a feature branch (`git checkout -b feature/YourFeature`)
+4. Make changes and write tests
+5. Run test suite (`npm run cypress:run`)
+6. Commit changes (`git commit -m 'Add feature'`)
+7. Push to branch (`git push origin feature/YourFeature`)
+8. Create Pull Request
+
+**Coding Standards:**
+- Follow existing TypeScript and React patterns
+- Write tests for new features using Page Object Model
+- Maintain responsive design for all screen sizes
+- Document complex functions and components
+- Use meaningful commit messages
 
 ---
 
@@ -710,4 +1165,8 @@ npm install -D @types/react @types/react-dom
 
 Private family project - not for redistribution.
 
-# Beyhan Family Website
+---
+
+## Contact
+
+For questions or issues, contact the repository maintainer through GitHub.
