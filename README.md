@@ -8,6 +8,8 @@ A modern, secure family website built with React, TypeScript, Firebase Authentic
 - [Quick Start](#quick-start)
 - [Project Structure](#project-structure)
 - [Features](#features)
+- [Personal Finance Tracking](#personal-finance-tracking)
+- [Cypress Testing](#cypress-testing)
 - [Deployment](#deployment)
 
 ---
@@ -714,13 +716,31 @@ beyhan-family/
 - ✅ Firebase Storage integration
 - ✅ Image optimization
 
+### Personal Finance Tracking (Admin-Only)
+- ✅ Admin-only access control via environment variables
+- ✅ Transaction management (income/expenses)
+- ✅ 14 expense categories + 4 income categories with subcategories
+- ✅ Full CRUD operations (Create, Read, Update, Delete)
+- ✅ Edit functionality with inline form (date, amount, merchant, payment method, description)
+- ✅ Asset/investment tracking with net worth calculations
+- ✅ Transaction filtering (type, category, date range, search)
+- ✅ Reports & analytics with interactive charts (recharts library)
+- ✅ Monthly expense/income analysis
+- ✅ Net income trend visualization
+- ✅ CSV export functionality
+- ✅ Eastern US timezone handling for accurate date entry
+- ✅ Mobile-optimized transaction entry form
+- ✅ Real-time statistics dashboard
+
 ### Testing & Quality Assurance
 - ✅ Comprehensive E2E test suite with Cypress
 - ✅ Page Object Model pattern for maintainable tests
 - ✅ TypeScript support in tests
 - ✅ Automated CI/CD testing before deployment
-- ✅ 24+ passing tests across all features
+- ✅ 90+ passing tests across all features
 - ✅ Screenshot and video recording on failures
+- ✅ Complete finance feature test coverage (60+ tests)
+- ✅ Transaction edit functionality tests (10 new tests)
 
 ### Deployment & DevOps
 - ✅ GitHub Actions CI/CD pipeline
@@ -729,6 +749,588 @@ beyhan-family/
 - ✅ Custom domain support (beyhanfamily.com)
 - ✅ Environment variable management
 - ✅ Production build optimization
+
+---
+
+## Personal Finance Tracking
+
+### Overview
+The Personal Finance module is an admin-only feature that provides comprehensive expense tracking, income management, and financial analytics. Access is controlled via environment variables, ensuring only designated administrators can view and manage financial data.
+
+### Architecture & Security
+
+**Admin Access Control:**
+```typescript
+// Environment variable defines admin email
+VITE_ADMIN_EMAIL=fbeyhan@gmail.com
+
+// Admin check utility (src/utils/adminAuth.ts)
+export const isAdmin = (userEmail: string | null): boolean => {
+  const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
+  return userEmail === adminEmail;
+};
+
+// Protected route with admin verification
+{currentUser && isAdmin(currentUser.email) && (
+  <Route path="/finance" element={<Finance />} />
+)}
+```
+
+**Firestore Security Rules:**
+```javascript
+// Only admin can access finance collections
+match /transactions/{transactionId} {
+  allow read, write: if request.auth.uid != null 
+    && request.auth.token.email == "fbeyhan@gmail.com";
+}
+
+match /assets/{assetId} {
+  allow read, write: if request.auth.uid != null 
+    && request.auth.token.email == "fbeyhan@gmail.com";
+}
+```
+
+### Features
+
+#### 1. **Finance Dashboard** ([Finance.tsx](src/pages/Finance.tsx))
+Main hub showing real-time financial overview:
+- Monthly expenses summary with color-coded card
+- Monthly income summary
+- Net income calculation (income - expenses)
+- Total net worth from all assets
+- Navigation cards to all finance sub-pages
+- Responsive grid layout
+
+#### 2. **Add Transaction** ([FinanceAdd.tsx](src/pages/FinanceAdd.tsx))
+Mobile-optimized quick transaction entry:
+- Type toggle: Expense vs Income
+- 14 expense categories with subcategories:
+  - Food (Groceries, Restaurants, Coffee Shops)
+  - Transportation (Gas, Public Transit, Uber/Lyft, Car Maintenance)
+  - Housing (Rent/Mortgage, Utilities, Internet, Repairs)
+  - Healthcare (Doctor, Pharmacy, Insurance)
+  - Entertainment (Movies, Concerts, Subscriptions)
+  - Shopping (Clothes, Electronics, Home Goods)
+  - Personal Care (Haircut, Gym, Spa)
+  - Education (Tuition, Books, Courses)
+  - Travel (Flights, Hotels, Activities)
+  - Bills (Phone, Insurance, Loans)
+  - Gifts (Birthday, Holiday, Charity)
+  - Pets (Food, Vet, Supplies)
+  - Kids (Daycare, Activities, School)
+  - Other
+- 4 income categories with subcategories:
+  - Salary (Paycheck, Bonus)
+  - Investment (Dividends, Capital Gains, Interest)
+  - Business (Sales, Services)
+  - Other
+- Date picker with Eastern US timezone handling
+- Amount input with dollar sign prefix
+- Merchant/vendor field
+- Payment method (Credit Card, Debit Card, Cash, etc.)
+- Description field for additional details
+- Success message with automatic form reset
+
+**Timezone Handling:**
+```typescript
+// Eastern timezone date helper
+const getTodayInEastern = (): string => {
+  const today = new Date();
+  const easternDate = new Date(today.toLocaleString('en-US', { 
+    timeZone: 'America/New_York' 
+  }));
+  return easternDate.toISOString().split('T')[0];
+};
+```
+
+#### 3. **Transaction History** ([FinanceTransactions.tsx](src/pages/FinanceTransactions.tsx))
+Comprehensive transaction management with filtering:
+- **View Transactions:**
+  - Card-based layout with color-coded type badges
+  - Display: date, category, subcategory, merchant, payment method
+  - Amount with color coding (red for expenses, green for income)
+  - Net total calculation at top
+
+- **Filter Options:**
+  - By type (All, Expense, Income)
+  - By category (All Categories + specific categories)
+  - By date range (All Time, Today, This Week, This Month, This Year)
+  - Search by description, category, or merchant
+
+- **Edit Functionality (NEW):**
+  - Click "Edit" button to open inline edit form
+  - Editable fields: Date, Amount, Merchant, Payment Method, Description
+  - "Save Changes" commits updates to Firestore
+  - "Cancel" discards changes and returns to view mode
+  - Real-time UI update after save
+  - Proper Timestamp conversion for date handling
+
+- **Delete Transactions:**
+  - Confirmation dialog before deletion
+  - Immediate removal from Firestore and UI
+
+#### 4. **Asset Tracking** ([FinanceAssets.tsx](src/pages/FinanceAssets.tsx))
+Investment and retirement account management:
+- **Asset Types:**
+  - Investment Account (Brokerage, Stocks, ETFs)
+  - Retirement Account (401k, IRA, Roth IRA)
+  - Savings Account
+  - Property (Real Estate)
+
+- **Features:**
+  - Add new assets with institution name, account number, balance
+  - Edit existing asset balances
+  - Delete assets with confirmation
+  - Net worth calculation (sum of all asset balances)
+  - Last updated date tracking
+  - Color-coded asset type badges
+
+#### 5. **Reports & Analytics** ([FinanceReports.tsx](src/pages/FinanceReports.tsx))
+Visual financial analysis with recharts library:
+- **Month Selector:** Analyze any month from dropdown
+- **Summary Cards:**
+  - Total expenses for selected month
+  - Total income for selected month
+  - Net income (income - expenses)
+  - Color-coded for positive/negative values
+
+- **Pie Chart:** Expenses by category
+  - Interactive hover tooltips
+  - Percentage breakdown
+  - Color-coded categories
+
+- **Top 5 Categories:** Spending breakdown
+  - Bar graphs showing amount per category
+  - Percentage of total expenses
+  - Sorted by highest spending
+
+- **Bar Chart:** Monthly income vs expenses
+  - Side-by-side comparison
+  - Last 6 months trend
+  - Green for income, red for expenses
+
+- **Line Chart:** Net income trend
+  - 6-month historical view
+  - Visual trend line showing financial health
+  - Tooltip with exact values
+
+- **CSV Export:** Download transaction data for external analysis
+
+### Data Models
+
+**Transaction Interface:**
+```typescript
+interface Transaction {
+  id: string;
+  type: 'expense' | 'income';
+  amount: number;
+  category: string;
+  subcategory?: string;
+  description?: string;
+  date: Date;  // Stored as Firestore Timestamp
+  merchant?: string;
+  paymentMethod?: string;
+  createdAt: Date;
+}
+```
+
+**Asset Interface:**
+```typescript
+interface Asset {
+  id: string;
+  name: string;
+  type: 'investment' | 'retirement' | 'savings' | 'property';
+  balance: number;
+  institution?: string;
+  accountNumber?: string;
+  lastUpdated: Date;  // Stored as Firestore Timestamp
+}
+```
+
+### Development Process
+
+**Phase 1: Planning & Architecture (2 hours)**
+- Discussed multiple deployment options
+- Selected Option 1: Same domain with admin-only access (free, secure)
+- Designed data models and collection structure
+- Planned security rules and access control
+
+**Phase 2: Core Implementation (6 hours)**
+- Created admin utility function (adminAuth.ts)
+- Built Finance dashboard with overview cards
+- Implemented FinanceAdd page with category system
+- Developed FinanceTransactions with filtering
+- Created FinanceAssets for investment tracking
+- Built FinanceReports with recharts integration
+- Added routing and navigation
+
+**Phase 3: Timezone Bug Fix (1 hour)**
+- Discovered date picker showing wrong date (UTC vs Eastern)
+- Implemented getTodayInEastern() helper function
+- Applied fix to FinanceAdd and FinanceAssets pages
+- Verified correct date display
+
+**Phase 4: Edit Functionality (2 hours)**
+- Added edit state management (editingId, editForm)
+- Implemented inline edit form with all fields
+- Created handleEdit, handleSaveEdit, handleCancelEdit functions
+- Fixed Timestamp conversion for date editing
+- Updated local state after edits
+
+**Phase 5: Testing (4 hours)**
+- Created 5 page object classes following existing patterns
+- Wrote 60+ comprehensive Cypress tests
+- Added tests for dashboard, add, transactions, assets, reports
+- Implemented transaction edit tests (10 new tests)
+- Verified all tests pass in CI/CD pipeline
+
+**Total Development Time:** ~15 hours
+
+### Usage Instructions
+
+**For Administrators:**
+1. Log in with admin email (fbeyhan@gmail.com)
+2. Dashboard shows "Personal Finance" card (non-admins don't see this)
+3. Click "Personal Finance" to access finance dashboard
+4. Use navigation cards to access different sections
+5. Add transactions quickly via "Add Transaction" page
+6. View and edit history in "Transaction History"
+7. Track investments in "My Assets"
+8. Analyze spending in "Reports"
+
+**Adding Admin User:**
+1. Update `.env` file: `VITE_ADMIN_EMAIL=your-email@example.com`
+2. Update Firestore rules with your email
+3. Add GitHub Secrets: `VITE_ADMIN_EMAIL`, `CYPRESS_ADMIN_EMAIL`, `CYPRESS_ADMIN_PASSWORD`
+4. Rebuild and deploy
+
+---
+
+## Cypress Testing
+
+### Test Architecture
+
+**Page Object Model Pattern:**
+All tests follow the Page Object Model (POM) pattern for maintainability and reusability. Page objects encapsulate page-specific logic and element selectors.
+
+**Directory Structure:**
+```
+cypress/
+├── e2e/                                    # Test files
+│   ├── login.cy.ts                        # Authentication tests (8 tests)
+│   ├── dashboard.cy.ts                    # Dashboard tests (7 tests)
+│   ├── familyTree.cy.ts                   # Family tree tests (12 tests)
+│   ├── trips.cy.ts                        # Trips tests (11 tests)
+│   ├── familyPictures.cy.ts               # Pictures tests (6 tests)
+│   ├── changePassword.cy.ts               # Password change tests (8 tests)
+│   ├── finance.cy.ts                      # Finance dashboard tests (10 tests)
+│   ├── financeAdd.cy.ts                   # Add transaction tests (11 tests)
+│   ├── financeTransactions.cy.ts          # Transaction history tests (23 tests)
+│   ├── financeAssets.cy.ts                # Asset tracking tests (15 tests)
+│   └── financeReports.cy.ts               # Reports tests (13 tests)
+├── support/
+│   ├── pages/                             # Page Object classes
+│   │   ├── BasePage.ts                    # Base class with common methods
+│   │   ├── LoginPage.ts
+│   │   ├── DashboardPage.ts
+│   │   ├── FamilyTreePage.ts
+│   │   ├── TripsPage.ts
+│   │   ├── FamilyPicturesPage.ts
+│   │   ├── ChangePasswordPage.ts
+│   │   ├── FinancePage.ts
+│   │   ├── FinanceAddPage.ts
+│   │   ├── FinanceTransactionsPage.ts
+│   │   ├── FinanceAssetsPage.ts
+│   │   └── FinanceReportsPage.ts
+│   ├── commands.js                        # Custom Cypress commands
+│   └── e2e.js                             # Global test configuration
+├── fixtures/                               # Test data files
+└── tsconfig.json                          # TypeScript configuration
+```
+
+### Test Coverage
+
+**Total Tests: 124+ passing tests**
+
+#### Authentication Tests (login.cy.ts - 8 tests)
+- ✅ Display login form elements
+- ✅ Successful login with valid credentials
+- ✅ Failed login with invalid credentials
+- ✅ Password visibility toggle
+- ✅ Remember me functionality
+- ✅ Form validation
+- ✅ Auto-redirect when already authenticated
+- ✅ Session persistence
+
+#### Dashboard Tests (dashboard.cy.ts - 7 tests)
+- ✅ Display dashboard after login
+- ✅ Show all navigation cards
+- ✅ Navigate to each feature section
+- ✅ Display user greeting
+- ✅ Logout functionality
+- ✅ Protected route behavior
+- ✅ Admin-only finance card visibility
+
+#### Family Tree Tests (familyTree.cy.ts - 12 tests)
+- ✅ Display family tree page
+- ✅ Add new family member
+- ✅ Edit existing member
+- ✅ Delete member with confirmation
+- ✅ Upload profile photo
+- ✅ Set parent relationships
+- ✅ Display member details
+- ✅ Validation for required fields
+- ✅ Date picker functionality
+- ✅ Duplicate detection
+- ✅ Tree view and list view toggle
+- ✅ Real-time updates
+
+#### Trips Tests (trips.cy.ts - 11 tests)
+- ✅ Display trips page
+- ✅ Add new trip
+- ✅ Edit existing trip
+- ✅ Delete trip with confirmation
+- ✅ Upload multiple photos
+- ✅ Date range selection
+- ✅ Location input
+- ✅ Description and highlights
+- ✅ Photo gallery display
+- ✅ Form validation
+- ✅ Real-time synchronization
+
+#### Family Pictures Tests (familyPictures.cy.ts - 6 tests)
+- ✅ Display pictures gallery
+- ✅ Upload new picture
+- ✅ Delete picture with confirmation
+- ✅ Grid layout display
+- ✅ Firebase Storage integration
+- ✅ Image loading
+
+#### Change Password Tests (changePassword.cy.ts - 8 tests)
+- ✅ Display change password form
+- ✅ Successfully change password
+- ✅ Validation for current password
+- ✅ Password strength requirements
+- ✅ Password confirmation match
+- ✅ Error handling for wrong current password
+- ✅ Success message display
+- ✅ Form reset after success
+
+#### Finance Dashboard Tests (finance.cy.ts - 10 tests)
+- ✅ Admin-only access verification
+- ✅ Display finance dashboard elements
+- ✅ Monthly expenses card with amount
+- ✅ Monthly income card with amount
+- ✅ Net income calculation
+- ✅ Net worth from assets
+- ✅ Navigation to Add Transaction page
+- ✅ Navigation to Transaction History page
+- ✅ Navigation to My Assets page
+- ✅ Navigation to Reports page
+
+#### Add Transaction Tests (financeAdd.cy.ts - 11 tests)
+- ✅ Display add transaction form
+- ✅ Toggle between expense and income
+- ✅ Select expense category and subcategory
+- ✅ Select income category and subcategory
+- ✅ Enter amount with validation
+- ✅ Select date (Eastern timezone)
+- ✅ Enter merchant/vendor
+- ✅ Select payment method
+- ✅ Enter description
+- ✅ Successfully submit transaction
+- ✅ Form reset after submission
+
+#### Transaction History Tests (financeTransactions.cy.ts - 23 tests)
+- ✅ Display transaction history page
+- ✅ Show all transactions
+- ✅ Filter by type (all, expense, income)
+- ✅ Filter by category
+- ✅ Filter by date range (today, week, month, year)
+- ✅ Search transactions by description
+- ✅ Display net total calculation
+- ✅ Delete transaction with confirmation
+- ✅ Empty state for no transactions
+- ✅ Navigate back to finance dashboard
+- ✅ **Edit button visibility**
+- ✅ **Open inline edit form**
+- ✅ **Edit form displays current values**
+- ✅ **Cancel edit without saving**
+- ✅ **Edit amount and save**
+- ✅ **Edit merchant and save**
+- ✅ **Edit payment method and save**
+- ✅ **Edit description and save**
+- ✅ **Edit date and save**
+- ✅ **Edit multiple fields simultaneously**
+- ✅ **Verify changes persist after save**
+- ✅ **Proper Timestamp conversion**
+- ✅ **Real-time UI updates**
+
+#### Asset Tracking Tests (financeAssets.cy.ts - 15 tests)
+- ✅ Display assets page
+- ✅ Show asset form
+- ✅ Add investment account
+- ✅ Add retirement account
+- ✅ Add savings account
+- ✅ Add property asset
+- ✅ Edit asset balance
+- ✅ Delete asset with confirmation
+- ✅ Calculate net worth
+- ✅ Display last updated date
+- ✅ Form validation
+- ✅ Asset type badges
+- ✅ Institution and account number fields
+- ✅ Real-time balance updates
+- ✅ Navigate back to finance
+
+#### Reports & Analytics Tests (financeReports.cy.ts - 13 tests)
+- ✅ Display reports page
+- ✅ Month selector functionality
+- ✅ Summary cards (expenses, income, net)
+- ✅ Pie chart: expenses by category
+- ✅ Pie chart tooltips
+- ✅ Top 5 spending categories
+- ✅ Bar chart: monthly income vs expenses
+- ✅ Line chart: net income trend
+- ✅ Chart legends
+- ✅ Data filtering by month
+- ✅ CSV export button
+- ✅ No data state handling
+- ✅ Navigate back to finance
+
+### Running Tests Locally
+
+**Prerequisites:**
+```bash
+# Ensure dev server is running
+npm run dev
+
+# In separate terminal, open Cypress
+npm run cypress:open
+```
+
+**Interactive Testing:**
+1. Cypress Test Runner opens
+2. Click "E2E Testing"
+3. Select Chrome browser
+4. Click on any test file to run
+5. Watch tests execute in real browser
+6. Debug with DevTools
+
+**Headless Testing:**
+```bash
+# Run all tests
+npm run cypress:run
+
+# Run specific test file
+npx cypress run --spec "cypress/e2e/financeTransactions.cy.ts"
+
+# Run tests with specific browser
+npx cypress run --browser chrome
+```
+
+### CI/CD Integration
+
+**GitHub Actions Workflow:**
+```yaml
+# .github/workflows/deploy.yml
+- name: Run Cypress Tests
+  run: npm run cypress:run
+  env:
+    CYPRESS_ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+    CYPRESS_ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+```
+
+**Test Execution in Pipeline:**
+1. Code pushed to GitHub
+2. GitHub Actions triggered
+3. Install dependencies
+4. Build application
+5. Start preview server
+6. Run all Cypress tests
+7. Generate screenshots/videos on failure
+8. Deploy to GitHub Pages only if tests pass
+
+### Test Data Management
+
+**cypress.env.json:**
+```json
+{
+  "ADMIN_EMAIL": "fbeyhan@gmail.com",
+  "ADMIN_PASSWORD": "your-password"
+}
+```
+
+**GitHub Secrets (for CI/CD):**
+- `ADMIN_EMAIL` - Admin email for authentication tests
+- `ADMIN_PASSWORD` - Admin password for authentication tests
+- `VITE_ADMIN_EMAIL` - Admin email for finance access control
+
+### Page Object Pattern Example
+
+**FinanceTransactionsPage.ts:**
+```typescript
+export class FinanceTransactionsPage extends BasePage {
+  visitTransactionsPage(): void {
+    this.visit('/finance/transactions');
+  }
+
+  clickEditFirstTransaction(): void {
+    cy.contains('Edit').first().click();
+  }
+
+  editAmount(newAmount: string): void {
+    cy.contains('Amount').parent()
+      .find('input[type="number"]')
+      .clear()
+      .type(newAmount);
+  }
+
+  clickSaveEdit(): void {
+    cy.contains('Save Changes').click();
+  }
+}
+```
+
+**Test File Usage:**
+```typescript
+describe('Finance - Transaction History', () => {
+  const transactionsPage = new FinanceTransactionsPage();
+
+  it('edits transaction amount and saves', () => {
+    transactionsPage.clickEditFirstTransaction();
+    transactionsPage.editAmount('99.99');
+    transactionsPage.clickSaveEdit();
+    cy.wait(1000);
+    transactionsPage.verifyTransactionExists('99.99', 'Shopping');
+  });
+});
+```
+
+### Best Practices
+
+**Test Isolation:**
+- Each test is independent
+- `beforeEach` sets up clean state
+- Tests don't rely on previous test data
+- Auth state cleared before each test
+
+**Waiting Strategies:**
+- Use `cy.wait(1000)` for Firestore operations
+- Wait for elements to be visible before interaction
+- Avoid arbitrary long waits
+- Use Cypress auto-retry logic
+
+**Assertions:**
+- Verify UI elements visible
+- Check data persistence
+- Validate navigation
+- Confirm Firestore updates
+
+**Data Cleanup:**
+- Tests create temporary data
+- Delete actions clean up test data
+- Firestore Rules prevent unauthorized access
 
 ---
 
@@ -1143,20 +1745,25 @@ const dateOfBirth = new Date(year, month - 1, day)
 
 ## Project Statistics
 
-- **Total Test Files:** 6 (TypeScript)
-- **Page Objects:** 7 (including BasePage)
-- **Test Cases:** 24+ passing tests
-- **Code Coverage:** Authentication, CRUD operations, navigation, file uploads
-- **Lines of Code:** 2,300+ in main application
-- **Dependencies:** 20+ npm packages
+- **Total Test Files:** 11 (TypeScript E2E tests)
+- **Page Objects:** 13 (including BasePage)
+- **Test Cases:** 124+ passing tests
+- **Finance Tests:** 82 tests (dashboard, add, transactions, assets, reports, edit)
+- **Code Coverage:** Authentication, CRUD operations, navigation, file uploads, financial tracking, analytics
+- **Lines of Code:** 4,500+ in main application
+- **Finance Module:** 1,800+ lines across 5 pages
+- **Dependencies:** 25+ npm packages (including recharts for charts)
 - **Build Time:** ~15 seconds
-- **Deployment Time:** 3-5 minutes (including tests)
+- **Test Execution Time:** ~3-4 minutes for full suite
+- **Deployment Time:** 5-7 minutes (including tests)
 
 ---
 
 ## Future Enhancements
 
 Potential features for future development:
+
+**Family Portal:**
 - [ ] Advanced family tree visualization (D3.js or similar)
 - [ ] Search and filter functionality for family members
 - [ ] Export family tree data (PDF, JSON)
@@ -1171,6 +1778,22 @@ Potential features for future development:
 - [ ] DNA test integration
 - [ ] Historical timeline view
 - [ ] Family statistics and analytics
+
+**Personal Finance:**
+- [ ] Budget planning and tracking
+- [ ] Bill reminders and recurring transactions
+- [ ] Bank account integration via Plaid API
+- [ ] Tax category tagging for tax preparation
+- [ ] Multi-currency support
+- [ ] Savings goals and progress tracking
+- [ ] Investment performance analytics
+- [ ] Spending alerts and notifications
+- [ ] Mobile app (React Native)
+- [ ] Receipt photo upload and OCR
+- [ ] Year-over-year comparison reports
+- [ ] Custom category creation
+- [ ] Split transactions for shared expenses
+- [ ] Financial goal projections
 
 ---
 

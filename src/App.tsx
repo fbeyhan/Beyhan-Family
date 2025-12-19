@@ -8,6 +8,11 @@ import { FamilyPictures } from './pages/FamilyPictures'
 import { Trips } from './pages/Trips'
 import { FamilyTree } from './pages/FamilyTree'
 import { ChangePassword } from './pages/ChangePassword'
+import Finance from './pages/Finance'
+import FinanceAdd from './pages/FinanceAdd'
+import FinanceTransactions from './pages/FinanceTransactions'
+import FinanceAssets from './pages/FinanceAssets'
+import FinanceReports from './pages/FinanceReports'
 
 export default function App() {
   return (
@@ -52,6 +57,46 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ChangePassword />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finance"
+            element={
+              <ProtectedRoute>
+                <Finance />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finance/add"
+            element={
+              <ProtectedRoute>
+                <FinanceAdd />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finance/transactions"
+            element={
+              <ProtectedRoute>
+                <FinanceTransactions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finance/assets"
+            element={
+              <ProtectedRoute>
+                <FinanceAssets />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/finance/reports"
+            element={
+              <ProtectedRoute>
+                <FinanceReports />
               </ProtectedRoute>
             }
           />

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { isAdmin } from '../utils/adminAuth'
 
 interface MenuItemProps {
   title: string
@@ -66,6 +67,23 @@ export const Dashboard: React.FC = () => {
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-6 py-12">
+        {/* Admin Personal Finance Section */}
+        {isAdmin(user?.email) && (
+          <div className="mb-12">
+            <h2 className="text-3xl font-bold text-gray-800 mb-3" style={{fontFamily: 'Poppins, sans-serif'}}>💼 Personal Finance (Admin Only)</h2>
+            <p className="text-gray-600 mb-6 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Track your personal expenses, income, and assets</p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              <MenuItem
+                title="Personal Finance"
+                description="Manage expenses, income, and financial tracking"
+                icon="💰"
+                link="/finance"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Family Portal Section */}
         <h2 className="text-3xl font-bold text-gray-800 mb-3" style={{fontFamily: 'Poppins, sans-serif'}}>✨ Family Portal</h2>
         <p className="text-gray-600 mb-10 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Choose where you'd like to explore</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

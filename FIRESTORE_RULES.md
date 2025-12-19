@@ -3,12 +3,29 @@
 ## Required Collections
 
 Your app uses the following Firestore collections:
+
+**Family Collections (All authenticated users):**
 1. `familyPhotos` - For Family Pictures page
 2. `familyTrips` - For Family Trips (trip information)
 3. `tripPhotos` - For photos associated with each trip
 4. `familyMembers` - For Family Tree page (member profiles)
 
+**Personal Finance Collections (Admin only):**
+5. `transactions` - Income and expense records
+6. `assets` - Investment/retirement account balances
+7. `categories` - Customizable expense/income categories
+
 ## Security Rules Setup
+
+⚠️ **IMPORTANT - Manual Admin Email Configuration Required:**
+
+Before applying these rules, you MUST replace `'your-admin-email@example.com'` in the `isAdmin()` function with your actual admin email address. This cannot be done via environment variables in Firestore rules - it must be hardcoded in the Firebase Console.
+
+**Steps:**
+1. Copy the rules below
+2. Find the line: `return request.auth != null && request.auth.token.email == 'your-admin-email@example.com';`
+3. Replace `'your-admin-email@example.com'` with your actual email (e.g., `'john@example.com'`)
+4. Paste into Firebase Console
 
 Go to Firebase Console → Firestore Database → Rules and apply these rules:
 
@@ -97,6 +114,34 @@ service cloud.firestore {
       // Allow users to delete their own family members
       allow delete: if isSignedIn() 
                     && resource.data.createdBy == request.auth.token.email;
+    }
+    
+    // ========================================
+    // PERSONAL FINANCE COLLECTIONS (ADMIN ONLY)
+    // ========================================
+    // IMPORTANT: Replace 'your-admin-email@example.com' with your actual admin email
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'your-admin-email@example.com';
+    }
+    
+    // Financial Transactions Collection (expenses and income)
+    match /transactions/{transactionId} {
+      // Only admin can read, create, update, or delete transactions
+      allow read, write: if isAdmin();
+    }
+    
+    // Assets Collection (investments, retirement accounts, etc.)
+    match /assets/{assetId} {
+      // Only admin can read, create, update, or delete assets
+      allow read, write: if isAdmin();
+    }
+    
+    // Categories Collection (expense/income categories)
+    match /categories/{categoryId} {
+      // Only admin can read, create, update, or delete categories
+      allow read, write: if isAdmin();
     }
   }
 }
