@@ -475,10 +475,16 @@ Sensitive test credentials are stored securely using Cypress environment variabl
 - Add repository secrets in **Settings** → **Secrets and variables** → **Actions**:
   - `TEST_EMAIL` - Test account email
   - `TEST_PASSWORD` - Test account password
-- Reference in GitHub Actions workflow using environment variables:
-  - `CYPRESS_TEST_EMAIL: ${{ secrets.TEST_EMAIL }}`
-  - `CYPRESS_TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}`
-- Cypress automatically reads `CYPRESS_` prefixed environment variables
+- Update `.github/workflows/deploy.yml` to include environment variables in the test job:
+```yaml
+env:
+  VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+  # ... other Firebase secrets
+  CYPRESS_TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+  CYPRESS_TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+```
+- Cypress automatically reads `CYPRESS_` prefixed environment variables and makes them available via `Cypress.env()`
+- **Important:** Without these environment variables in the workflow, tests will fail with `undefined` values
 
 **Running tests:**
 ```bash
