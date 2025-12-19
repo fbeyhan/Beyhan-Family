@@ -10,7 +10,7 @@ describe('Family Pictures', () => {
   beforeEach(() => {
     // Login and navigate to Family Pictures page
     loginPage.visitLoginPage();
-    loginPage.login('fbeyhan@hotmail.com', 'Fatih1978');
+    loginPage.login(Cypress.env('TEST_EMAIL'), Cypress.env('TEST_PASSWORD'));
     loginPage.verifySuccessfulLogin();
     dashboardPage.navigateToFamilyPictures();
   });

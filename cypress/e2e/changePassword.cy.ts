@@ -8,7 +8,7 @@ describe('Change Password', () => {
   beforeEach(() => {
     // Login and navigate to Change Password page
     loginPage.visitLoginPage();
-    loginPage.login('fbeyhan@hotmail.com', 'Fatih1978');
+    loginPage.login(Cypress.env('TEST_EMAIL'), Cypress.env('TEST_PASSWORD'));
     loginPage.verifySuccessfulLogin();
     changePasswordPage.navigateToChangePassword();
   });
@@ -39,7 +39,7 @@ describe('Change Password', () => {
   });
 
   it('shows error for same password', () => {
-    changePasswordPage.fillPasswordFields('Fatih1978', 'Fatih1978', 'Fatih1978');
+    changePasswordPage.fillPasswordFields(Cypress.env('TEST_PASSWORD'), Cypress.env('TEST_PASSWORD'), Cypress.env('TEST_PASSWORD'));
     changePasswordPage.clickUpdatePassword();
     changePasswordPage.verifyErrorMessage('must be different');
   });

@@ -451,6 +451,35 @@ This project implements a comprehensive E2E testing strategy using Cypress with 
 - ✅ Responsive design elements
 - ✅ Date handling and timezone consistency
 
+**Cypress Configuration:**
+The `cypress.config.js` file defines the `baseUrl` as `https://beyhanfamily.com`. This allows all test navigation methods to use relative paths. For example:
+- When `cy.visit('/')` is called in tests, Cypress automatically prepends the `baseUrl`
+- This makes tests portable and easier to switch between environments
+- The `LoginPage.visitLoginPage()` method calls `this.visit('/')`, which internally uses `cy.visit('/')` and navigates to `https://beyhanfamily.com/`
+
+**Environment Variables & Secrets Management:**
+Sensitive test credentials are stored securely using Cypress environment variables:
+
+**Local Development:**
+- Create `cypress.env.json` file in project root (already gitignored):
+```json
+{
+  "TEST_EMAIL": "your-test-email@example.com",
+  "TEST_PASSWORD": "your-test-password"
+}
+```
+- Access in tests: `Cypress.env('TEST_EMAIL')` and `Cypress.env('TEST_PASSWORD')`
+- This file is **never committed** to version control (included in `.gitignore`)
+
+**CI/CD (GitHub Actions):**
+- Add repository secrets in **Settings** → **Secrets and variables** → **Actions**:
+  - `TEST_EMAIL` - Test account email
+  - `TEST_PASSWORD` - Test account password
+- Reference in GitHub Actions workflow using environment variables:
+  - `CYPRESS_TEST_EMAIL: ${{ secrets.TEST_EMAIL }}`
+  - `CYPRESS_TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}`
+- Cypress automatically reads `CYPRESS_` prefixed environment variables
+
 **Running tests:**
 ```bash
 npm run cypress:open              # Interactive mode with GUI

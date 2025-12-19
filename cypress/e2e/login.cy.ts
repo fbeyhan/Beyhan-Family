@@ -22,7 +22,7 @@ describe('Login Page', () => {
   });
 
   it('logs in with valid credentials', () => {
-    loginPage.login('fbeyhan@hotmail.com', 'Fatih1978');
+    loginPage.login(Cypress.env('TEST_EMAIL'), Cypress.env('TEST_PASSWORD'));
     loginPage.verifySuccessfulLogin();
   });
 });

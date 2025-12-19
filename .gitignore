@@ -7,3 +7,4 @@ cypress/videos
 .env
 .env.local
 .env.production
+cypress.env.json
