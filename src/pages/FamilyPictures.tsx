@@ -109,21 +109,30 @@ export const FamilyPictures: React.FC = () => {
   }
 
   const deletePhoto = async (photo: Photo) => {
-    if (!window.confirm('Are you sure you want to delete this photo?')) return
+    if (!window.confirm('Are you sure you want to delete this photo?')) return;
 
     try {
       // Delete from Storage
-      const storageRef = ref(storage, photo.storagePath)
+      const storageRef = ref(storage, photo.storagePath);
       await deleteObject(storageRef)
+        .catch((error) => {
+          // If file not found, log and continue
+          if (error.code === 'storage/object-not-found') {
+            console.warn('Photo file not found in storage, removing Firestore reference anyway.');
+          } else {
+            throw error;
+          }
+        });
 
       // Delete from Firestore
-      await deleteDoc(doc(db, 'familyPhotos', photo.id))
+      await deleteDoc(doc(db, 'familyPhotos', photo.id));
 
-      setPhotos(photos.filter(p => p.id !== photo.id))
-      setSelectedPhoto(null)
+      setPhotos(photos.filter(p => p.id !== photo.id));
+      setSelectedPhoto(null);
+      alert('Photo deleted successfully!');
     } catch (error) {
-      console.error('Error deleting photo:', error)
-      alert('Failed to delete photo. Please try again.')
+      console.error('Error deleting photo:', error);
+      alert('Failed to delete photo. Please try again.');
     }
   }
 

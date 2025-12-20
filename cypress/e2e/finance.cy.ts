@@ -1,48 +1,48 @@
-//   import { LoginPage } from '../support/pages/LoginPage';
-//   import { DashboardPage } from '../support/pages/DashboardPage';
-//   import { FinancePage } from '../support/pages/FinancePage';
+  import { LoginPage } from '../support/pages/LoginPage';
+  import { DashboardPage } from '../support/pages/DashboardPage';
+  import { FinancePage } from '../support/pages/FinancePage';
 
-//   describe.skip('Finance Dashboard Tiles', () => {
-//     const loginPage = new LoginPage();
-//     beforeEach(() => {
-//       // Login as admin and navigate to finance dashboard
-//       loginPage.visitLoginPage();
-//       loginPage.login(Cypress.env('ADMIN_EMAIL'), Cypress.env('ADMIN_PASSWORD'));
-//       loginPage.verifySuccessfulLogin();
-//       cy.get('a[data-discover="true"]').contains('Personal Finance').click();
-//     });
+  describe.skip('Finance Dashboard Tiles', () => {
+    const loginPage = new LoginPage();
+    beforeEach(() => {
+      // Login as admin and navigate to finance dashboard
+      loginPage.visitLoginPage();
+      loginPage.login(Cypress.env('ADMIN_EMAIL'), Cypress.env('ADMIN_PASSWORD'));
+      loginPage.verifySuccessfulLogin();
+      cy.get('a[data-discover="true"]').contains('Personal Finance').click();
+    });
 
-//     it('should display all main finance tiles', () => {
-//       cy.contains('Monthly Expenses').should('be.visible');
-//       cy.contains('Monthly Income').should('be.visible');
-//       cy.contains('Net Income').should('be.visible');
-//       cy.contains('Net Worth').should('be.visible');
-//       cy.contains('Add Transaction').should('be.visible');
-//       cy.contains('Transactions').should('be.visible');
-//       cy.contains('Assets').should('be.visible');
-//       cy.contains('Reports').should('be.visible');
-//     });
+    it('should display all main finance tiles', () => {
+      cy.contains('Monthly Expenses').should('be.visible');
+      cy.contains('Monthly Income').should('be.visible');
+      cy.contains('Net Income').should('be.visible');
+      cy.contains('Net Worth').should('be.visible');
+      cy.contains('Add Transaction').should('be.visible');
+      cy.contains('Transactions').should('be.visible');
+      cy.contains('Assets').should('be.visible');
+      cy.contains('Reports').should('be.visible');
+    });
 
-//     it('should navigate to Add Transaction page', () => {
-//       cy.contains('Add Transaction').click();
-//       cy.url().should('include', '/finance/add');
-//     });
+    it('should navigate to Add Transaction page', () => {
+      cy.contains('Add Transaction').click();
+      cy.url().should('include', '/finance/add');
+    });
 
-//     it('should navigate to Transactions page', () => {
-//       cy.contains('Transactions').click();
-//       cy.url().should('include', '/finance/transactions');
-//     });
+    it('should navigate to Transactions page', () => {
+      cy.contains('Transactions').click();
+      cy.url().should('include', '/finance/transactions');
+    });
 
-//     it('should navigate to Assets page', () => {
-//       cy.contains('Assets').click();
-//       cy.url().should('include', '/finance/assets');
-//     });
+    it('should navigate to Assets page', () => {
+      cy.contains('Assets').click();
+      cy.url().should('include', '/finance/assets');
+    });
 
-//     it('should navigate to Reports page', () => {
-//       cy.contains('Reports').click();
-//       cy.url().should('include', '/finance/reports');
-//     });
-//   });
+    it('should navigate to Reports page', () => {
+      cy.contains('Reports').click();
+      cy.url().should('include', '/finance/reports');
+    });
+  });
 
 // // describe.skip('Finance Dashboard', () => {
 // //   const loginPage = new LoginPage();

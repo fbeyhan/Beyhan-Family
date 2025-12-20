@@ -235,6 +235,14 @@ export const Trips: React.FC = () => {
         const photoData = photoDoc.data() as TripPhoto
         const storageRef = ref(storage, photoData.storagePath)
         await deleteObject(storageRef)
+        .catch((error) => {
+          // If file not found, log and continue
+          if (error.code === 'storage/object-not-found') {
+            console.warn('Photo file not found in storage, removing Firestore reference anyway.');
+          } else {
+            throw error;
+          }
+        });
         await deleteDoc(doc(db, 'tripPhotos', photoDoc.id))
       }
 
