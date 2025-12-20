@@ -70,7 +70,7 @@ export const Dashboard: React.FC = () => {
         {/* Admin Personal Finance Section */}
         {isAdmin(user?.email) && (
           <div className="mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-3" style={{fontFamily: 'Poppins, sans-serif'}}>💼 Personal Finance (Admin Only)</h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-3" style={{fontFamily: 'Poppins, sans-serif'}} data-cy="finance-dashboard-subtitle">💼 Personal Finance (Admin Only)</h2>
             <p className="text-gray-600 mb-6 font-medium" style={{fontFamily: 'Poppins, sans-serif'}}>Track your personal expenses, income, and assets</p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               <MenuItem

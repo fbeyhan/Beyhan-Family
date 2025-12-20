@@ -29,7 +29,8 @@ const FinanceTransactions = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateRange, setDateRange] = useState('all');
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Transaction>>({});
+  // Use string for date in editForm for input compatibility
+  const [editForm, setEditForm] = useState<Partial<Omit<Transaction, 'date'> & { date?: string }>>({});
 
   // Redirect if not admin
   if (!user || !isAdmin(user.email)) {
@@ -151,7 +152,7 @@ const FinanceTransactions = () => {
       category: transaction.category,
       subcategory: transaction.subcategory,
       description: transaction.description,
-      date: transaction.date,
+      date: transaction.date ? transaction.date.toISOString().slice(0, 10) : '',
       merchant: transaction.merchant,
       paymentMethod: transaction.paymentMethod,
     });
@@ -167,7 +168,7 @@ const FinanceTransactions = () => {
 
     try {
       // Convert string date to Firestore Timestamp
-      const dateTimestamp = editForm.date 
+      const dateTimestamp = editForm.date
         ? Timestamp.fromDate(new Date(editForm.date + 'T00:00:00'))
         : Timestamp.now();
 
@@ -230,13 +231,14 @@ const FinanceTransactions = () => {
         {/* Header */}
         <div className="mb-6">
           <button
+            data-cy="back-to-finance"
             onClick={() => navigate('/finance')}
             className="text-amber-600 hover:text-amber-700 mb-4 flex items-center gap-2"
           >
             ← Back to Finance
           </button>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-rose-600 bg-clip-text text-transparent">
-            Transaction History
+            <span data-cy="transactions-title">Transaction History</span>
           </h1>
         </div>
 
@@ -247,6 +249,7 @@ const FinanceTransactions = () => {
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">Type</label>
               <select
+                data-cy="type-filter"
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value as any)}
                 className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-amber-500 outline-none"
@@ -352,6 +355,7 @@ const FinanceTransactions = () => {
                           <label className="block text-sm font-semibold text-slate-700 mb-2">Date</label>
                           <input
                             type="date"
+                            data-cy="edit-date-input"
                             value={editForm.date || ''}
                             onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
                             className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-amber-500 outline-none"

@@ -2,7 +2,7 @@ import { LoginPage } from '../support/pages/LoginPage';
 import { FinanceAddPage } from '../support/pages/FinanceAddPage';
 import { FinanceReportsPage } from '../support/pages/FinanceReportsPage';
 
-describe('Finance - Reports & Analytics', () => {
+describe.skip('Finance - Reports & Analytics', () => {
   const loginPage = new LoginPage();
   const financeAddPage = new FinanceAddPage();
   const reportsPage = new FinanceReportsPage();

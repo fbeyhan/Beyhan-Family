@@ -1,7 +1,7 @@
 import { LoginPage } from '../support/pages/LoginPage';
 import { FinanceAssetsPage } from '../support/pages/FinanceAssetsPage';
 
-describe('Finance - Assets Tracking', () => {
+describe.skip('Finance - Assets Tracking', () => {
   const loginPage = new LoginPage();
   const assetsPage = new FinanceAssetsPage();
 

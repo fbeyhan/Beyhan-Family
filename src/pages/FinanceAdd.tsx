@@ -114,12 +114,13 @@ const FinanceAdd = () => {
         {/* Header */}
         <div className="mb-6">
           <button
+            data-cy="back-to-finance"
             onClick={() => navigate('/finance')}
             className="text-amber-600 hover:text-amber-700 mb-4 flex items-center gap-2"
           >
             ← Back to Finance
           </button>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-rose-600 bg-clip-text text-transparent">
+          <h1 data-cy="add-transaction-title" className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-rose-600 bg-clip-text text-transparent">
             Add Transaction
           </h1>
         </div>
@@ -138,6 +139,7 @@ const FinanceAdd = () => {
             <label className="block text-sm font-semibold text-slate-700 mb-3">Type *</label>
             <div className="grid grid-cols-2 gap-4">
               <button
+                data-cy="type-expense"
                 type="button"
                 onClick={() => {
                   setType('expense');
@@ -153,6 +155,7 @@ const FinanceAdd = () => {
                 💸 Expense
               </button>
               <button
+                data-cy="type-income"
                 type="button"
                 onClick={() => {
                   setType('income');
@@ -286,6 +289,7 @@ const FinanceAdd = () => {
 
           {/* Submit Button */}
           <button
+            data-cy="save-transaction"
             type="submit"
             disabled={saving}
             className="w-full py-4 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold rounded-xl hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-lg"

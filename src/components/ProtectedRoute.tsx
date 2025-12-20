@@ -7,7 +7,10 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth();
+  // Debug: log user and isAuthenticated for troubleshooting
+  // eslint-disable-next-line no-console
+  console.log('ProtectedRoute user:', user, 'isAuthenticated:', isAuthenticated);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />

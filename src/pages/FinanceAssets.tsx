@@ -247,6 +247,7 @@ const FinanceAssets = () => {
         {/* Header */}
         <div className="mb-6">
           <button
+            data-cy="back-to-finance"
             onClick={() => navigate('/finance')}
             className="text-amber-600 hover:text-amber-700 mb-4 flex items-center gap-2"
           >
@@ -255,11 +256,12 @@ const FinanceAssets = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-rose-600 bg-clip-text text-transparent">
-                Assets & Accounts
+                <span data-cy="assets-title">Assets & Accounts</span>
               </h1>
               <p className="text-slate-600 mt-1">Track investments, retirement, and savings</p>
             </div>
             <button
+              data-cy="add-asset-btn"
               onClick={() => setShowForm(!showForm)}
               className="px-6 py-3 bg-gradient-to-r from-amber-500 to-rose-500 text-white font-bold rounded-xl hover:shadow-lg transition-all"
             >
@@ -405,7 +407,7 @@ const FinanceAssets = () => {
           {loading ? (
             <div className="p-8 text-center text-slate-600">Loading assets...</div>
           ) : assets.length === 0 ? (
-            <div className="p-8 text-center text-slate-600">
+            <div className="p-8 text-center text-slate-600" data-cy="assets-empty-state">
               No assets tracked yet. Click "Add Asset" to get started.
             </div>
           ) : (

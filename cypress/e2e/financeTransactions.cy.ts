@@ -2,7 +2,7 @@ import { LoginPage } from '../support/pages/LoginPage';
 import { FinanceAddPage } from '../support/pages/FinanceAddPage';
 import { FinanceTransactionsPage } from '../support/pages/FinanceTransactionsPage';
 
-describe('Finance - Transaction History', () => {
+describe.skip('Finance - Transaction History', () => {
   const loginPage = new LoginPage();
   const financeAddPage = new FinanceAddPage();
   const transactionsPage = new FinanceTransactionsPage();

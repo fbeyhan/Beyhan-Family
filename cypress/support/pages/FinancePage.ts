@@ -17,7 +17,13 @@ export class FinancePage extends BasePage {
    */
   verifyFinancePageElements(): void {
     cy.contains('Personal Finance').should('be.visible');
-    cy.contains('Track expenses, income, and assets').should('be.visible');
+    cy.url().then(url => {
+      cy.log('Current URL:', url);
+    });
+    cy.document().then(doc => {
+      cy.log('HTML:', doc.documentElement.outerHTML);
+    });
+    cy.get('[data-cy="finance-dashboard-subtitle"]', { timeout: 8000 }).should('be.visible');
     cy.contains('Monthly Expenses').should('be.visible');
     cy.contains('Monthly Income').should('be.visible');
     cy.contains('Net Income').should('be.visible');

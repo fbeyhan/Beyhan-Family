@@ -147,6 +147,7 @@ const FinanceReports = () => {
         {/* Header */}
         <div className="mb-6">
           <button
+            data-cy="back-to-finance"
             onClick={() => navigate('/finance')}
             className="text-amber-600 hover:text-amber-700 mb-4 flex items-center gap-2"
           >
@@ -155,7 +156,7 @@ const FinanceReports = () => {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-rose-600 bg-clip-text text-transparent">
-                Reports & Analytics
+                <span data-cy="reports-title">Reports & Analytics</span>
               </h1>
               <p className="text-slate-600 mt-1">Financial insights and trends</p>
             </div>
@@ -167,6 +168,7 @@ const FinanceReports = () => {
                 className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-amber-500 outline-none"
               />
               <button
+                data-cy="export-csv-btn"
                 onClick={exportToCSV}
                 className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white font-bold rounded-xl hover:shadow-lg transition-all"
               >
@@ -184,17 +186,17 @@ const FinanceReports = () => {
           <>
             {/* Summary Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-2xl shadow-lg">
+              <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-2xl shadow-lg" data-cy="summary-expenses">
                 <h3 className="text-lg font-semibold mb-2 opacity-90">Total Expenses</h3>
                 <p className="text-3xl font-bold">{formatCurrency(totalExpenses)}</p>
                 <p className="text-sm opacity-80 mt-1">{filteredTransactions.filter(t => t.type === 'expense').length} transactions</p>
               </div>
-              <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-2xl shadow-lg">
+              <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-2xl shadow-lg" data-cy="summary-income">
                 <h3 className="text-lg font-semibold mb-2 opacity-90">Total Income</h3>
                 <p className="text-3xl font-bold">{formatCurrency(totalIncome)}</p>
                 <p className="text-sm opacity-80 mt-1">{filteredTransactions.filter(t => t.type === 'income').length} transactions</p>
               </div>
-              <div className={`bg-gradient-to-br ${netIncome >= 0 ? 'from-emerald-500 to-emerald-600' : 'from-orange-500 to-orange-600'} text-white p-6 rounded-2xl shadow-lg`}>
+              <div className={`bg-gradient-to-br ${netIncome >= 0 ? 'from-emerald-500 to-emerald-600' : 'from-orange-500 to-orange-600'} text-white p-6 rounded-2xl shadow-lg`} data-cy="summary-net-income">
                 <h3 className="text-lg font-semibold mb-2 opacity-90">Net Income</h3>
                 <p className="text-3xl font-bold">{formatCurrency(netIncome)}</p>
                 <p className="text-sm opacity-80 mt-1">{netIncome >= 0 ? 'Surplus' : 'Deficit'}</p>
@@ -205,7 +207,7 @@ const FinanceReports = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {/* Expenses by Category Pie Chart */}
               <div className="bg-white rounded-2xl shadow-lg p-6">
-                <h2 className="text-xl font-bold text-slate-900 mb-4">Expenses by Category</h2>
+                <h2 className="text-xl font-bold text-slate-900 mb-4" data-cy="expenses-by-category">Expenses by Category</h2>
                 {pieData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>

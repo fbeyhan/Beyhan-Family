@@ -16,12 +16,12 @@ export class FinanceAddPage extends BasePage {
    * Verify add transaction page elements
    */
   verifyAddTransactionPageElements(): void {
-    cy.contains('Add Transaction').should('be.visible');
+    cy.get('[data-cy="add-transaction-title"]').should('be.visible');
     cy.contains('Type').should('be.visible');
     cy.contains('Amount').should('be.visible');
     cy.contains('Date').should('be.visible');
     cy.contains('Category').should('be.visible');
-    cy.contains('Save Transaction').should('be.visible');
+    cy.get('[data-cy="save-transaction"]').should('be.visible');
   }
 
   /**
@@ -29,9 +29,9 @@ export class FinanceAddPage extends BasePage {
    */
   selectType(type: 'expense' | 'income'): void {
     if (type === 'expense') {
-      cy.contains('Expense').click();
+      cy.get('[data-cy="type-expense"]').click();
     } else {
-      cy.contains('Income').click();
+      cy.get('[data-cy="type-income"]').click();
     }
   }
 
@@ -88,7 +88,7 @@ export class FinanceAddPage extends BasePage {
    * Submit transaction form
    */
   submitTransaction(): void {
-    cy.contains('Save Transaction').click();
+    cy.get('[data-cy="save-transaction"]').click();
   }
 
   /**
@@ -135,6 +135,6 @@ export class FinanceAddPage extends BasePage {
    * Click back to finance
    */
   clickBackToFinance(): void {
-    cy.contains('Back to Finance').click();
+    cy.get('[data-cy="back-to-finance"]').click();
   }
 }

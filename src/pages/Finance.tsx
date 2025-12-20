@@ -36,6 +36,12 @@ const DashboardCard = ({ title, value, subtitle, onClick, gradient }: DashboardC
 const Finance = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  // Debug: log user email and admin email for troubleshooting
+  if (user) {
+    // @ts-ignore
+    // eslint-disable-next-line no-console
+    console.log('FinancePage user.email:', user.email, 'VITE_ADMIN_EMAIL:', import.meta.env.VITE_ADMIN_EMAIL);
+  }
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<OverviewStats>({
     monthlyExpenses: 0,
@@ -140,7 +146,7 @@ const Finance = () => {
           <h1 className="text-4xl font-bold bg-gradient-to-r from-amber-600 to-rose-600 bg-clip-text text-transparent">
             Personal Finance
           </h1>
-          <p className="text-slate-600 mt-2">Track expenses, income, and assets</p>
+          <p className="text-slate-600 mt-2" data-cy="finance-dashboard-subtitle">Track expenses, income, and assets</p>
         </div>
 
         {/* Overview Cards */}
