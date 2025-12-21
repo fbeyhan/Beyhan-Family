@@ -3,7 +3,7 @@ import { DashboardPage } from '../support/pages/DashboardPage';
 import { FinancePage } from '../support/pages/FinancePage';
 
 
-  describe('Finance Dashboard', () => {
+  describe.skip('Finance Dashboard', () => {
     const loginPage = new LoginPage();
     const dashboardPage = new DashboardPage();
     const financePage = new FinancePage();

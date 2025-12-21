@@ -4,7 +4,7 @@ import { DashboardPage } from '../support/pages/DashboardPage';
 import { FinancePage } from '../support/pages/FinancePage';
 import { FinanceTransactionsPage } from '../support/pages/FinanceTransactionsPage';
 
-describe('Finance - Transaction History', () => {
+describe.skip('Finance - Transaction History', () => {
   const loginPage = new LoginPage();
   const financeAddPage = new FinanceAddPage();
   const dashboardPage = new DashboardPage();

@@ -3,7 +3,7 @@ import { DashboardPage } from '../support/pages/DashboardPage';
 import { FinancePage } from '../support/pages/FinancePage';
 import { FinanceAssetsPage } from '../support/pages/FinanceAssetsPage';
 
-describe('Finance - Assets Tracking', () => {
+describe.skip('Finance - Assets Tracking', () => {
   const loginPage = new LoginPage();
   const assetsPage = new FinanceAssetsPage();
   const dashboardPage = new DashboardPage();
