@@ -157,7 +157,7 @@ const FinanceTransactions = () => {
       date: transaction.date ? transaction.date.toISOString().slice(0, 10) : '',
       merchant: transaction.merchant,
       paymentMethod: transaction.paymentMethod,
-      owner: transaction.owner || 'Fatih Beyhan',
+      owner: transaction.owner || '',
     });
   };
 
@@ -386,10 +386,11 @@ const FinanceTransactions = () => {
                           <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-2">Who made the expense?</label>
                             <select
-                              value={editForm.owner || 'Fatih Beyhan'}
+                              value={editForm.owner || ''}
                               onChange={(e) => setEditForm({ ...editForm, owner: e.target.value })}
                               className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-amber-500 outline-none"
                             >
+                              <option value="">-- No Name --</option>
                               <option value="Fatih Beyhan">Fatih Beyhan</option>
                               <option value="Sule Beyhan">Sule Beyhan</option>
                             </select>

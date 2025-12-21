@@ -53,7 +53,7 @@ const FinanceAdd = () => {
   const [date, setDate] = useState(getTodayInEastern());
   const [merchant, setMerchant] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
-  const [owner, setOwner] = useState('Fatih Beyhan');
+  const [owner, setOwner] = useState(''); // Default to empty
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
@@ -208,13 +208,13 @@ const FinanceAdd = () => {
           {/* Owner Dropdown (only for expense) */}
           {type === 'expense' && (
             <div className="mb-6">
-              <label className="block text-sm font-semibold text-slate-700 mb-2">Who made the expense? *</label>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Who made the expense?</label>
               <select
                 value={owner}
                 onChange={(e) => setOwner(e.target.value)}
                 className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:border-amber-500 focus:ring-2 focus:ring-amber-200 outline-none"
-                required
               >
+                <option value="">-- No Name --</option>
                 <option value="Fatih Beyhan">Fatih Beyhan</option>
                 <option value="Sule Beyhan">Sule Beyhan</option>
               </select>
