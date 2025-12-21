@@ -109,35 +109,35 @@ const FinanceAdd = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-2 sm:p-4 md:p-8">
-      <div className="max-w-md w-full mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-6">
           <button
             data-cy="back-to-finance"
             onClick={() => navigate('/finance')}
-            className="text-amber-600 hover:text-amber-700 mb-4 flex items-center gap-2 text-base sm:text-lg"
+            className="text-amber-600 hover:text-amber-700 mb-4 flex items-center gap-2"
           >
             ← Back to Finance
           </button>
-          <h1 data-cy="add-transaction-title" className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-amber-600 to-rose-600 bg-clip-text text-transparent text-center">
+          <h1 data-cy="add-transaction-title" className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-rose-600 bg-clip-text text-transparent">
             Add Transaction
           </h1>
         </div>
 
         {/* Success Message */}
         {showSuccess && (
-          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-green-100 border border-green-400 text-green-700 rounded-xl animate-pulse text-center text-base sm:text-lg">
+          <div className="mb-6 p-4 bg-green-100 border border-green-400 text-green-700 rounded-xl animate-pulse">
             ✓ Transaction added successfully!
           </div>
         )}
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
           {/* Type Toggle */}
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Type *</label>
-            <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          <div className="mb-6">
+            <label className="block text-sm font-semibold text-slate-700 mb-3">Type *</label>
+            <div className="grid grid-cols-2 gap-4">
               <button
                 data-cy="type-expense"
                 type="button"
@@ -146,7 +146,7 @@ const FinanceAdd = () => {
                   setCategory('');
                   setSubcategory('');
                 }}
-                className={`h-12 sm:h-14 rounded-xl font-semibold transition-all text-base sm:text-lg ${
+                className={`p-4 rounded-xl font-semibold transition-all ${
                   type === 'expense'
                     ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -162,7 +162,7 @@ const FinanceAdd = () => {
                   setCategory('');
                   setSubcategory('');
                 }}
-                className={`h-12 sm:h-14 rounded-xl font-semibold transition-all text-base sm:text-lg ${
+                className={`p-4 rounded-xl font-semibold transition-all ${
                   type === 'income'
                     ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg'
                     : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
