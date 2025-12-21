@@ -12,6 +12,7 @@ interface Photo {
   uploadedBy: string
   uploadedAt: Timestamp
   storagePath: string
+  reactions?: Record<string, string[]> // { emoji: [user1, user2, ...] }
 }
 
 export const FamilyPictures: React.FC = () => {
@@ -24,6 +25,26 @@ export const FamilyPictures: React.FC = () => {
   const [dragActive, setDragActive] = useState(false)
   const [editingCaption, setEditingCaption] = useState<string | null>(null)
   const [editedCaptionText, setEditedCaptionText] = useState('')
+  const [hoveredPhotoId, setHoveredPhotoId] = useState<string | null>(null)
+  const emojiOptions = [
+    '❤️', // Heart
+    '😂', // Laugh
+    '😍', // Love eyes
+    '👍', // Thumbs up
+    '🎉', // Party popper
+    '🙏', // Praying hands
+    '😢', // Crying
+    '😮', // Surprised
+    '🎂', // Birthday cake
+    '🥳', // Celebration face
+    '🪩', // Disco ball (party/celebration)
+    '🎆', // Fireworks (New Year)
+    '🎇', // Sparkler (New Year)
+    '💍', // Ring (Anniversary)
+    '💐', // Bouquet (Anniversary/Celebration)
+    '👩‍❤️‍👨', // Couple (Anniversary)
+    '👨‍👩‍👧‍👦', // Family
+  ]
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { user: currentUser } = useAuth()
 
@@ -37,14 +58,43 @@ export const FamilyPictures: React.FC = () => {
       const photosQuery = query(collection(db, 'familyPhotos'), orderBy('uploadedAt', 'desc'))
       const querySnapshot = await getDocs(photosQuery)
       const photosData: Photo[] = []
-      querySnapshot.forEach((doc) => {
-        photosData.push({ id: doc.id, ...doc.data() } as Photo)
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data()
+        photosData.push({
+          id: docSnap.id,
+          ...data,
+          reactions: data.reactions || {},
+        } as Photo)
       })
       setPhotos(photosData)
     } catch (error) {
       console.error('Error loading photos:', error)
     } finally {
       setLoading(false)
+    }
+  }
+  // Add or remove emoji reaction for a photo
+  const handleEmojiReaction = async (photo: Photo, emoji: string) => {
+    if (!currentUser) return
+    const user = currentUser.email
+    if (!user) return
+    const reactions = { ...(photo.reactions || {}) }
+    const users = new Set(reactions[emoji] || [])
+    if (users.has(user)) {
+      users.delete(user)
+    } else {
+      users.add(user)
+    }
+    reactions[emoji] = Array.from(users)
+    // Remove emoji if no users left
+    if (reactions[emoji].length === 0) delete reactions[emoji]
+    try {
+      await updateDoc(doc(db, 'familyPhotos', photo.id), { reactions })
+      setPhotos((prev) => prev.map((p) =>
+        p.id === photo.id ? { ...p, reactions } : p
+      ))
+    } catch (error) {
+      alert('Failed to update emoji reaction')
     }
   }
 
@@ -301,72 +351,126 @@ export const FamilyPictures: React.FC = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-amber-100"
-                  onClick={() => setSelectedPhoto(photo)}
-                >
-                  <div className="aspect-square overflow-hidden">
-                    <img
-                      src={photo.url}
-                      alt={photo.caption}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="p-3">
-                    {editingCaption === photo.id ? (
-                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                        <input
-                          type="text"
-                          value={editedCaptionText}
-                          onChange={(e) => setEditedCaptionText(e.target.value)}
-                          className="flex-1 text-sm px-2 py-1 border border-amber-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none"
-                          style={{fontFamily: 'Poppins, sans-serif'}}
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') saveCaption(photo.id)
-                            if (e.key === 'Escape') cancelEdit()
-                          }}
-                        />
-                        <button
-                          onClick={() => saveCaption(photo.id)}
-                          className="text-green-600 hover:text-green-700 px-2"
-                          title="Save"
-                        >
-                          ✓
-                        </button>
-                        <button
-                          onClick={cancelEdit}
-                          className="text-red-600 hover:text-red-700 px-2"
-                          title="Cancel"
-                        >
-                          ✕
-                        </button>
+              {photos.map((photo) => {
+                const reactions = photo.reactions || {}
+                return (
+                  <div
+                    key={photo.id}
+                    className="group relative bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-amber-100"
+                    onClick={() => setSelectedPhoto(photo)}
+                    onMouseEnter={() => setHoveredPhotoId(photo.id)}
+                    onMouseLeave={() => setHoveredPhotoId((id) => (id === photo.id ? null : id))}
+                  >
+                    <div className="aspect-square overflow-hidden relative">
+                      <img
+                        src={photo.url}
+                        alt={photo.caption}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                      {/* Emoji reactions display (bottom right) */}
+                      <div className="absolute bottom-2 right-2 flex flex-wrap gap-1 z-10">
+                        {Object.entries(reactions).map(([emoji, users]) => {
+                          const tooltip = users.length === 1
+                            ? users[0]
+                            : users.join(', ')
+                          return (
+                            <span
+                              key={emoji}
+                              className="bg-white/80 rounded-full px-2 py-1 text-lg shadow border border-amber-200 flex items-center gap-1 select-none"
+                              style={{fontFamily: 'Poppins, sans-serif'}}
+                              title={tooltip}
+                            >
+                              {emoji} <span className="text-xs font-bold">{users.length}</span>
+                            </span>
+                          )
+                        })}
                       </div>
-                    ) : (
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold text-gray-800 truncate flex-1" style={{fontFamily: 'Poppins, sans-serif'}}>
-                          {photo.caption}
-                        </p>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            startEditCaption(photo)
+                      {/* Emoji menu on hover - top left */}
+                      {hoveredPhotoId === photo.id && (
+                        <div
+                          className="absolute top-2 left-2 flex gap-2 bg-white/90 rounded-xl shadow-lg px-3 py-2 z-20 animate-fade-in"
+                          style={{
+                            maxWidth: '90%',
+                            overflowX: 'auto',
+                            whiteSpace: 'nowrap',
+                            scrollbarWidth: 'thin',
                           }}
-                          className="text-amber-600 hover:text-amber-700 text-xs"
-                          title="Edit caption"
                         >
-                          ✏️
-                        </button>
-                      </div>
-                    )}
-                    <p className="text-xs text-gray-500 mt-1" style={{fontFamily: 'Poppins, sans-serif'}}>
-                      {photo.uploadedAt.toDate().toLocaleDateString()}
-                    </p>
+                          {emojiOptions.map((emoji) => {
+                            const user = currentUser?.email
+                            const selected = user && (reactions[emoji]?.includes(user))
+                            return (
+                              <button
+                                key={emoji}
+                                className={`text-2xl transition-transform hover:scale-125 inline-block ${selected ? 'ring-2 ring-amber-400' : ''}`}
+                                style={{ minWidth: 40 }}
+                                onClick={e => {
+                                  e.stopPropagation()
+                                  handleEmojiReaction(photo, emoji)
+                                }}
+                                title={emoji}
+                              >
+                                {emoji}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      {editingCaption === photo.id ? (
+                        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="text"
+                            value={editedCaptionText}
+                            onChange={(e) => setEditedCaptionText(e.target.value)}
+                            className="flex-1 text-sm px-2 py-1 border border-amber-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                            style={{fontFamily: 'Poppins, sans-serif'}}
+                            autoFocus
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveCaption(photo.id)
+                              if (e.key === 'Escape') cancelEdit()
+                            }}
+                          />
+                          <button
+                            onClick={() => saveCaption(photo.id)}
+                            className="text-green-600 hover:text-green-700 px-2"
+                            title="Save"
+                          >
+                            ✓
+                          </button>
+                          <button
+                            onClick={cancelEdit}
+                            className="text-red-600 hover:text-red-700 px-2"
+                            title="Cancel"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-sm font-semibold text-gray-800 truncate flex-1" style={{fontFamily: 'Poppins, sans-serif'}}>
+                            {photo.caption}
+                          </p>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              startEditCaption(photo)
+                            }}
+                            className="text-amber-600 hover:text-amber-700 text-xs"
+                            title="Edit caption"
+                          >
+                            ✏️
+                          </button>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1" style={{fontFamily: 'Poppins, sans-serif'}}>
+                        {photo.uploadedAt.toDate().toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

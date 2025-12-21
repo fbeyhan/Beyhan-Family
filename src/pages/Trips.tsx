@@ -25,6 +25,7 @@ interface TripPhoto {
   uploadedBy: string
   uploadedAt: Timestamp
   storagePath: string
+  reactions?: Record<string, string[]> // { emoji: [user1, user2, ...] }
 }
 
 export const Trips: React.FC = () => {
@@ -42,6 +43,11 @@ export const Trips: React.FC = () => {
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null)
   const [editingPhoto, setEditingPhoto] = useState<string | null>(null)
   const [editedPhotoCaption, setEditedPhotoCaption] = useState('')
+  const [hoveredPhotoId, setHoveredPhotoId] = useState<string | null>(null)
+  const emojiOptions = [
+    '❤️', '😂', '😍', '👍', '🎉', '🙏', '😢', '😮',
+    '🎂', '🥳', '🪩', '🎆', '🎇', '💍', '💐', '👩‍❤️‍👨', '👨‍👩‍👧‍👦'
+  ]
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { user: currentUser } = useAuth()
 
@@ -84,8 +90,13 @@ export const Trips: React.FC = () => {
       )
       const querySnapshot = await getDocs(photosQuery)
       const photosData: TripPhoto[] = []
-      querySnapshot.forEach((doc) => {
-        photosData.push({ id: doc.id, ...doc.data() } as TripPhoto)
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data()
+        photosData.push({
+          id: docSnap.id,
+          ...data,
+          reactions: data.reactions || {},
+        } as TripPhoto)
       })
       // Sort by uploadedAt on client side to avoid needing a composite index
       photosData.sort((a, b) => b.uploadedAt.toMillis() - a.uploadedAt.toMillis())
@@ -97,6 +108,32 @@ export const Trips: React.FC = () => {
       alert(`Error loading photos: ${error.message}`)
     } finally {
       setLoadingPhotos(false)
+    }
+  }
+
+  // Add or remove emoji reaction for a trip photo
+  const handleEmojiReaction = async (photo: TripPhoto, emoji: string) => {
+    if (!currentUser) return
+    const user = currentUser.email
+    if (!user) return
+    const reactions = { ...(photo.reactions || {}) }
+    const users = new Set(reactions[emoji] || [])
+    if (users.has(user)) {
+      users.delete(user)
+    } else {
+      users.add(user)
+    }
+    reactions[emoji] = Array.from(users)
+    if (reactions[emoji].length === 0) delete reactions[emoji]
+    try {
+      await updateDoc(doc(db, 'tripPhotos', photo.id), { reactions })
+      setTripPhotos((prev) => prev.map((p) =>
+        p.id === photo.id ? { ...p, reactions } : p
+      ))
+    } catch (error) {
+      console.error('Failed to update emoji reaction:', error)
+      const errorMsg = error instanceof Error ? error.message : String(error)
+      alert('Failed to update emoji reaction: ' + errorMsg)
     }
   }
 
@@ -775,66 +812,120 @@ export const Trips: React.FC = () => {
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {tripPhotos.map((photo) => (
-                      <div
-                        key={photo.id}
-                        className="group relative bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-amber-100"
-                        onClick={() => setSelectedPhoto(photo)}
-                      >
-                        <div className="aspect-square overflow-hidden">
-                          <img
-                            src={photo.url}
-                            alt={photo.caption}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                          />
-                        </div>
-                        <div className="p-2">
-                          {editingPhoto === photo.id ? (
-                            <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-                              <input
-                                type="text"
-                                value={editedPhotoCaption}
-                                onChange={(e) => setEditedPhotoCaption(e.target.value)}
-                                className="flex-1 text-xs px-1 py-1 border border-amber-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none"
-                                style={{fontFamily: 'Poppins, sans-serif'}}
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') savePhotoCaption(photo.id)
-                                  if (e.key === 'Escape') cancelPhotoEdit()
-                                }}
-                              />
-                              <button
-                                onClick={() => savePhotoCaption(photo.id)}
-                                className="text-green-600 hover:text-green-700 text-xs px-1"
-                              >
-                                ✓
-                              </button>
-                              <button
-                                onClick={cancelPhotoEdit}
-                                className="text-red-600 hover:text-red-700 text-xs px-1"
-                              >
-                                ✕
-                              </button>
+                    {tripPhotos.map((photo) => {
+                      const reactions = photo.reactions || {}
+                      return (
+                        <div
+                          key={photo.id}
+                          className="group relative bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-amber-100"
+                          onClick={() => setSelectedPhoto(photo)}
+                          onMouseEnter={() => setHoveredPhotoId(photo.id)}
+                          onMouseLeave={() => setHoveredPhotoId((id) => (id === photo.id ? null : id))}
+                        >
+                          <div className="aspect-square overflow-hidden relative">
+                            <img
+                              src={photo.url}
+                              alt={photo.caption}
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                            />
+                            {/* Emoji reactions display (bottom right) */}
+                            <div className="absolute bottom-2 right-2 flex flex-wrap gap-1 z-10">
+                              {Object.entries(reactions).map(([emoji, users]) => {
+                                const tooltip = users.length === 1
+                                  ? users[0]
+                                  : users.join(', ')
+                                return (
+                                  <span
+                                    key={emoji}
+                                    className="bg-white/80 rounded-full px-2 py-1 text-lg shadow border border-amber-200 flex items-center gap-1 select-none"
+                                    style={{fontFamily: 'Poppins, sans-serif'}}
+                                    title={tooltip}
+                                  >
+                                    {emoji} <span className="text-xs font-bold">{users.length}</span>
+                                  </span>
+                                )
+                              })}
                             </div>
-                          ) : (
-                            <div className="flex items-center justify-between gap-1">
-                              <p className="text-xs font-semibold text-gray-800 truncate flex-1" style={{fontFamily: 'Poppins, sans-serif'}}>
-                                {photo.caption}
-                              </p>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  startEditPhotoCaption(photo)
+                            {/* Emoji menu on hover - top left */}
+                            {hoveredPhotoId === photo.id && (
+                              <div
+                                className="absolute top-2 left-2 flex gap-2 bg-white/90 rounded-xl shadow-lg px-3 py-2 z-20 animate-fade-in"
+                                style={{
+                                  maxWidth: '90%',
+                                  overflowX: 'auto',
+                                  whiteSpace: 'nowrap',
+                                  scrollbarWidth: 'thin',
                                 }}
-                                className="text-amber-600 hover:text-amber-700 text-xs"
                               >
-                                ✏️
-                              </button>
-                            </div>
-                          )}
+                                {emojiOptions.map((emoji) => {
+                                  const user = currentUser?.email
+                                  const selected = user && (reactions[emoji]?.includes(user))
+                                  return (
+                                    <button
+                                      key={emoji}
+                                      className={`text-2xl transition-transform hover:scale-125 inline-block ${selected ? 'ring-2 ring-amber-400' : ''}`}
+                                      style={{ minWidth: 40 }}
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        handleEmojiReaction(photo, emoji)
+                                      }}
+                                      title={emoji}
+                                    >
+                                      {emoji}
+                                    </button>
+                                  )
+                                })}
+                              </div>
+                            )}
+                          </div>
+                          <div className="p-2">
+                            {editingPhoto === photo.id ? (
+                              <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="text"
+                                  value={editedPhotoCaption}
+                                  onChange={(e) => setEditedPhotoCaption(e.target.value)}
+                                  className="flex-1 text-xs px-1 py-1 border border-amber-300 rounded focus:ring-1 focus:ring-amber-500 focus:outline-none"
+                                  style={{fontFamily: 'Poppins, sans-serif'}}
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') savePhotoCaption(photo.id)
+                                    if (e.key === 'Escape') cancelPhotoEdit()
+                                  }}
+                                />
+                                <button
+                                  onClick={() => savePhotoCaption(photo.id)}
+                                  className="text-green-600 hover:text-green-700 text-xs px-1"
+                                >
+                                  ✓
+                                </button>
+                                <button
+                                  onClick={cancelPhotoEdit}
+                                  className="text-red-600 hover:text-red-700 text-xs px-1"
+                                >
+                                  ✕
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between gap-1">
+                                <p className="text-xs font-semibold text-gray-800 truncate flex-1" style={{fontFamily: 'Poppins, sans-serif'}}>
+                                  {photo.caption}
+                                </p>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    startEditPhotoCaption(photo)
+                                  }}
+                                  className="text-amber-600 hover:text-amber-700 text-xs"
+                                >
+                                  ✏️
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 )}
               </div>
