@@ -15,6 +15,7 @@ interface Transaction {
   date: Date;
   merchant?: string;
   paymentMethod?: string;
+  owner?: string;
   createdAt: Date;
 }
 
@@ -59,6 +60,7 @@ const FinanceTransactions = () => {
             date: typeof data.date === 'string' ? new Date(data.date) : data.date.toDate(),
             merchant: data.merchant,
             paymentMethod: data.paymentMethod,
+            owner: data.owner,
             createdAt: data.createdAt.toDate(),
           });
         });
@@ -155,6 +157,7 @@ const FinanceTransactions = () => {
       date: transaction.date ? transaction.date.toISOString().slice(0, 10) : '',
       merchant: transaction.merchant,
       paymentMethod: transaction.paymentMethod,
+      owner: transaction.owner || 'Fatih Beyhan',
     });
   };
 
@@ -178,6 +181,7 @@ const FinanceTransactions = () => {
         description: editForm.description || null,
         merchant: editForm.merchant || null,
         paymentMethod: editForm.paymentMethod || null,
+        owner: editForm.owner || null,
       });
 
       // Update local state
@@ -191,6 +195,7 @@ const FinanceTransactions = () => {
                 description: editForm.description,
                 merchant: editForm.merchant,
                 paymentMethod: editForm.paymentMethod,
+                owner: editForm.owner,
               }
             : t
         )
@@ -376,6 +381,21 @@ const FinanceTransactions = () => {
                           </div>
                         </div>
 
+                        {/* Owner Dropdown for expense */}
+                        {editForm.type === 'expense' && (
+                          <div>
+                            <label className="block text-sm font-semibold text-slate-700 mb-2">Who made the expense?</label>
+                            <select
+                              value={editForm.owner || 'Fatih Beyhan'}
+                              onChange={(e) => setEditForm({ ...editForm, owner: e.target.value })}
+                              className="w-full px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-amber-500 outline-none"
+                            >
+                              <option value="Fatih Beyhan">Fatih Beyhan</option>
+                              <option value="Sule Beyhan">Sule Beyhan</option>
+                            </select>
+                          </div>
+                        )}
+
                         <div>
                           <label className="block text-sm font-semibold text-slate-700 mb-2">Merchant</label>
                           <input
@@ -440,6 +460,9 @@ const FinanceTransactions = () => {
                             {transaction.type === 'income' ? '💰' : '💸'} {transaction.type}
                           </span>
                           <span className="text-sm text-slate-500">{formatDate(transaction.date)}</span>
+                          {transaction.type === 'expense' && transaction.owner && (
+                            <span className="text-xs ml-2 px-2 py-1 rounded bg-slate-200 text-slate-700 font-semibold">By: {transaction.owner}</span>
+                          )}
                         </div>
                         <h3 className="text-lg font-semibold text-slate-900 mb-1">
                           {transaction.category}

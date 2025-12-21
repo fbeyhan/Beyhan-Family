@@ -11,6 +11,7 @@ interface Transaction {
   amount: number;
   category: string;
   date: Date;
+  owner?: string;
 }
 
 const COLORS = [
@@ -26,6 +27,19 @@ const FinanceReports = () => {
   const [selectedMonth, setSelectedMonth] = useState(
     new Date().toISOString().slice(0, 7) // YYYY-MM format
   );
+  const [viewMode, setViewMode] = useState<'month' | 'year'>('month');
+  // Get all years present in the transactions for year selection
+  const allYears = Array.from(new Set(transactions.map(t => t.date.getFullYear()))).sort((a, b) => b - a);
+  const [selectedYear, setSelectedYear] = useState<number>(() => {
+    return allYears.length > 0 ? allYears[0] : new Date().getFullYear();
+  });
+
+  // Keep selectedYear in sync with available years if transactions change
+  useEffect(() => {
+    if (allYears.length > 0 && !allYears.includes(selectedYear)) {
+      setSelectedYear(allYears[0]);
+    }
+  }, [allYears, selectedYear]);
 
   // Redirect if not admin
   if (!user || !isAdmin(user.email)) {
@@ -48,6 +62,7 @@ const FinanceReports = () => {
             amount: data.amount,
             category: data.category,
             date: data.date.toDate(),
+            owner: data.owner,
           });
         });
 
@@ -62,11 +77,16 @@ const FinanceReports = () => {
     fetchTransactions();
   }, []);
 
-  // Filter transactions by selected month
-  const filteredTransactions = transactions.filter((t) => {
-    const txnMonth = t.date.toISOString().slice(0, 7);
-    return txnMonth === selectedMonth;
-  });
+  // Filter transactions by selected month or year
+  const filteredTransactions = viewMode === 'month'
+    ? transactions.filter((t) => {
+        const txnMonth = t.date.toISOString().slice(0, 7);
+        return txnMonth === selectedMonth;
+      })
+    : transactions.filter((t) => {
+        const txnYear = t.date.getFullYear();
+        return txnYear === selectedYear;
+      });
 
   // Calculate category breakdown
   const expensesByCategory = filteredTransactions
@@ -81,7 +101,7 @@ const FinanceReports = () => {
     .sort((a, b) => b.value - a.value);
 
   // Calculate monthly totals for the year
-  const currentYear = new Date(selectedMonth).getFullYear();
+  const currentYear = viewMode === 'month' ? new Date(selectedMonth).getFullYear() : selectedYear;
   const monthlyData = [];
   for (let month = 0; month < 12; month++) {
     const monthStr = `${currentYear}-${String(month + 1).padStart(2, '0')}`;
@@ -124,12 +144,13 @@ const FinanceReports = () => {
   };
 
   const exportToCSV = () => {
-    const headers = ['Date', 'Type', 'Category', 'Amount'];
+    const headers = ['Date', 'Type', 'Category', 'Amount', 'Person'];
     const rows = filteredTransactions.map((t) => [
       t.date.toISOString().split('T')[0],
       t.type,
       t.category,
       t.amount.toString(),
+      t.type === 'expense' ? (t.owner || '') : '',
     ]);
 
     const csv = [headers, ...rows].map((row) => row.join(',')).join('\n');
@@ -160,13 +181,38 @@ const FinanceReports = () => {
               </h1>
               <p className="text-slate-600 mt-1">Financial insights and trends</p>
             </div>
-            <div className="flex gap-3">
-              <input
-                type="month"
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-amber-500 outline-none"
-              />
+            <div className="flex gap-3 items-center">
+              <label className="font-semibold text-slate-700">View:</label>
+              <select
+                value={viewMode}
+                onChange={e => setViewMode(e.target.value as 'month' | 'year')}
+                className="px-3 py-2 border-2 border-slate-200 rounded-xl focus:border-amber-500 outline-none"
+              >
+                <option value="month">Monthly</option>
+                <option value="year">Annually</option>
+              </select>
+              {viewMode === 'month' && (
+                <input
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(e.target.value)}
+                  className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-amber-500 outline-none"
+                />
+              )}
+              {viewMode === 'year' && (
+                <>
+                  <span className="font-semibold text-slate-700">Year:</span>
+                  <select
+                    value={selectedYear}
+                    onChange={e => setSelectedYear(Number(e.target.value))}
+                    className="px-3 py-2 border-2 border-slate-200 rounded-xl focus:border-amber-500 outline-none"
+                  >
+                    {allYears.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
+                </>
+              )}
               <button
                 data-cy="export-csv-btn"
                 onClick={exportToCSV}
