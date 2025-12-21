@@ -1,3 +1,4 @@
+
 import { BasePage } from './BasePage';
 
 /**
@@ -25,14 +26,17 @@ export class FinanceAddPage extends BasePage {
   }
 
   /**
-   * Select transaction type
+   * Click the expense type button
    */
-  selectType(type: 'expense' | 'income'): void {
-    if (type === 'expense') {
-      cy.get('[data-cy="type-expense"]').click();
-    } else {
-      cy.get('[data-cy="type-income"]').click();
-    }
+  selectExpenseType(): void {
+    cy.get('[data-cy="type-expense"]').click();
+  }
+
+  /**
+   * Click the income type button
+   */
+  selectIncomeType(): void {
+    cy.get('[data-cy="type-income"]').click();
   }
 
   /**
@@ -95,7 +99,7 @@ export class FinanceAddPage extends BasePage {
    * Add a complete expense transaction
    */
   addExpense(amount: string, category: string, description?: string): void {
-    this.selectType('expense');
+    this.selectExpenseType();
     this.enterAmount(amount);
     this.selectCategory(category);
     if (description) {
@@ -108,7 +112,7 @@ export class FinanceAddPage extends BasePage {
    * Add a complete income transaction
    */
   addIncome(amount: string, category: string, description?: string): void {
-    this.selectType('income');
+    this.selectIncomeType();
     this.enterAmount(amount);
     this.selectCategory(category);
     if (description) {

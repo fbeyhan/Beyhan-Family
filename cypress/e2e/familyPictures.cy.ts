@@ -1,14 +1,16 @@
+
 import { LoginPage } from '../support/pages/LoginPage';
 import { DashboardPage } from '../support/pages/DashboardPage';
 import { FamilyPicturesPage } from '../support/pages/FamilyPicturesPage';
 
 describe('Family Pictures', () => {
+  // Page objects
   const loginPage = new LoginPage();
   const dashboardPage = new DashboardPage();
   const familyPicturesPage = new FamilyPicturesPage();
 
   beforeEach(() => {
-    // Login and navigate to Family Pictures page
+    // Login before each test and navigate to Family Pictures
     loginPage.visitLoginPage();
     loginPage.login(Cypress.env('TEST_EMAIL'), Cypress.env('TEST_PASSWORD'));
     loginPage.verifySuccessfulLogin();
@@ -16,34 +18,30 @@ describe('Family Pictures', () => {
   });
 
   afterEach(() => {
+    // Clear storage after each test
     familyPicturesPage.clearStorage();
   });
 
   it('displays all page elements', () => {
+    // Assert all expected elements are visible
     familyPicturesPage.verifyPageElements();
   });
 
   it.skip('uploads, verifies, views, and deletes a photo', () => {
     const testCaption = 'Test Photo for Cypress';
     const testImagePath = 'cypress/fixtures/test-image.jpg';
-
-    // Upload photo with caption
+    // Upload photo
     familyPicturesPage.uploadPhotoWithCaption(testCaption, testImagePath);
-
-    // Verify photo appears in the gallery
+    // Verify photo appears
     familyPicturesPage.verifyPhotoExists(testCaption);
-
-    // Click on the photo to view it
+    // View photo
     familyPicturesPage.clickPhotoByCaption(testCaption);
-
-    // Verify modal opens with photo details
+    // Verify modal and details
     familyPicturesPage.verifyModalOpen();
     familyPicturesPage.verifyElementExists(testCaption);
-
-    // Delete the photo
+    // Delete photo
     familyPicturesPage.clickDeleteButton();
-
-    // Verify photo is deleted
+    // Verify deletion
     familyPicturesPage.verifyPhotoDeleted(testCaption);
   });
 
@@ -51,11 +49,9 @@ describe('Family Pictures', () => {
     const originalCaption = 'Original Caption';
     const updatedCaption = 'Updated Caption';
     const testImagePath = 'cypress/fixtures/test-image.jpg';
-
-    // Upload a photo first
+    // Upload photo
     familyPicturesPage.uploadPhotoWithCaption(originalCaption, testImagePath);
-
-    // Click edit button
+    // Edit caption
     familyPicturesPage.clickEditButton(originalCaption);
 
     // Edit caption

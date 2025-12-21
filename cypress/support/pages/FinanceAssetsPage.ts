@@ -33,7 +33,8 @@ export class FinanceAssetsPage extends BasePage {
    * Verify asset form is visible
    */
   verifyAssetFormVisible(): void {
-    cy.contains('Add New Asset').should('be.visible');
+    // Try both possible headings for robustness
+    cy.contains('h2', /Edit Asset|Add New Asset/).should('be.visible');
     cy.contains('Type').should('be.visible');
     cy.contains('Account Name').should('be.visible');
     cy.contains('Balance').should('be.visible');

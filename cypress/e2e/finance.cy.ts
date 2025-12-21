@@ -1,46 +1,54 @@
-  import { LoginPage } from '../support/pages/LoginPage';
-  import { DashboardPage } from '../support/pages/DashboardPage';
-  import { FinancePage } from '../support/pages/FinancePage';
+import { LoginPage } from '../support/pages/LoginPage';
+import { DashboardPage } from '../support/pages/DashboardPage';
+import { FinancePage } from '../support/pages/FinancePage';
 
-  describe.skip('Finance Dashboard Tiles', () => {
+
+  describe('Finance Dashboard', () => {
     const loginPage = new LoginPage();
+    const dashboardPage = new DashboardPage();
+    const financePage = new FinancePage();
+
     beforeEach(() => {
       // Login as admin and navigate to finance dashboard
       loginPage.visitLoginPage();
       loginPage.login(Cypress.env('ADMIN_EMAIL'), Cypress.env('ADMIN_PASSWORD'));
       loginPage.verifySuccessfulLogin();
-      cy.get('a[data-discover="true"]').contains('Personal Finance').click();
+      dashboardPage.navigateToPersonalFinance();
     });
 
-    it('should display all main finance tiles', () => {
-      cy.contains('Monthly Expenses').should('be.visible');
-      cy.contains('Monthly Income').should('be.visible');
-      cy.contains('Net Income').should('be.visible');
-      cy.contains('Net Worth').should('be.visible');
-      cy.contains('Add Transaction').should('be.visible');
-      cy.contains('Transactions').should('be.visible');
-      cy.contains('Assets').should('be.visible');
-      cy.contains('Reports').should('be.visible');
+    afterEach(() => {
+      dashboardPage.clearStorage();
     });
 
-    it('should navigate to Add Transaction page', () => {
-      cy.contains('Add Transaction').click();
+    it('displays all main finance tiles', () => {
+      financePage.verifyFinancePageElements();
+      financePage.verifyNavigationCards();
+    });
+
+    it('navigates to Add Transaction page', () => {
+      financePage.clickAddTransaction();
       cy.url().should('include', '/finance/add');
     });
 
-    it('should navigate to Transactions page', () => {
-      cy.contains('Transactions').click();
+    it('navigates to Transactions page', () => {
+      financePage.clickTransactions();
       cy.url().should('include', '/finance/transactions');
     });
 
-    it('should navigate to Assets page', () => {
-      cy.contains('Assets').click();
+    it('navigates to Assets page', () => {
+      financePage.clickAssets();
       cy.url().should('include', '/finance/assets');
     });
 
-    it('should navigate to Reports page', () => {
-      cy.contains('Reports').click();
+    it('navigates to Reports page', () => {
+      financePage.clickReports();
       cy.url().should('include', '/finance/reports');
+    });
+
+    it('navigates back to main dashboard', () => {
+      financePage.clickBackToDashboard();
+      cy.url().should('include', '/dashboard');
+      cy.url().should('not.include', '/finance');
     });
   });
 

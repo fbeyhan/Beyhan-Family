@@ -4,9 +4,17 @@ import { BasePage } from './BasePage';
  * Dashboard Page Object
  * Contains all locators and methods for the Dashboard page
  */
+
 export class DashboardPage extends BasePage {
   // Locators
   private readonly logoutButton = 'button';
+
+  /**
+   * Navigate to Personal Finance page
+   */
+  navigateToPersonalFinance(): void {
+    cy.get('a[data-discover="true"]').contains('Personal Finance').click();
+  }
 
   /**
    * Verify all dashboard elements exist

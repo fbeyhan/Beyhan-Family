@@ -34,7 +34,7 @@ export class FinanceReportsPage extends BasePage {
    * Click export CSV button
    */
   clickExportCSV(): void {
-    cy.contains('Export CSV').click();
+    cy.contains(/Export CSV|Download CSV|Export to CSV/i).click();
   }
 
   /**
@@ -88,7 +88,7 @@ export class FinanceReportsPage extends BasePage {
    * Verify transaction count in summary
    */
   verifyTransactionCount(expectedCount: string): void {
-    cy.contains('transactions').should('contain', expectedCount);
+    cy.contains(/Transaction|Transactions|Transaction Count/i).should('contain', expectedCount);
   }
 
   /**

@@ -57,7 +57,7 @@ export class FinancePage extends BasePage {
    * Click on Assets card
    */
   clickAssets(): void {
-    cy.contains('Assets').parent().click();
+    cy.contains('div', 'Assets').click();
   }
 
   /**

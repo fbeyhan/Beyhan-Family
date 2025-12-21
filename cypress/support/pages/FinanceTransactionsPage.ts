@@ -186,4 +186,24 @@ export class FinanceTransactionsPage extends BasePage {
   clickCancelEdit(): void {
     cy.contains('Cancel').click();
   }
+
+  /**
+   * Delete a transaction by amount and category
+   */
+  deleteTransactionByAmountAndCategory(amount: string, category: string): void {
+    cy.get('tr').contains(category).parents('tr').within(() => {
+      cy.contains(amount).should('exist');
+      cy.contains('Delete').click();
+    });
+    this.confirmDelete();
+  }
+
+  /**
+   * Verify a transaction does NOT exist by amount and category
+   */
+  verifyTransactionNotExists(amount: string, category: string): void {
+    cy.get('tr').contains(category).parents('tr').within(() => {
+      cy.contains(amount).should('not.exist');
+    });
+  }
 }
