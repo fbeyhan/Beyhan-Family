@@ -2,8 +2,17 @@ import React, { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { storage, db } from '../config/firebase'
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
-import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, Timestamp, updateDoc, where } from 'firebase/firestore'
+import { collection, addDoc, getDocs, deleteDoc, doc, query, orderBy, Timestamp, updateDoc, where, onSnapshot } from 'firebase/firestore'
 import { useAuth } from '../context/AuthContext'
+
+
+// Comment type for trip photo comments
+interface Comment {
+  id: string
+  text: string
+  author: string
+  createdAt: Timestamp
+}
 
 interface Trip {
   id: string
@@ -38,6 +47,84 @@ export const Trips: React.FC = () => {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [photoCaption, setPhotoCaption] = useState('')
   const [selectedPhoto, setSelectedPhoto] = useState<TripPhoto | null>(null)
+  // Comments state for selected photo
+  const [comments, setComments] = useState<Comment[]>([])
+  const [newComment, setNewComment] = useState('')
+  const [commentLoading, setCommentLoading] = useState(false)
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [editedCommentText, setEditedCommentText] = useState('')
+  // Edit a comment
+  const handleEditComment = (commentId: string, text: string) => {
+    setEditingCommentId(commentId)
+    setEditedCommentText(text)
+  }
+  // Save edited comment
+  const handleSaveEditedComment = async (commentId: string) => {
+    if (!selectedPhoto || !editedCommentText.trim()) return
+    setCommentLoading(true)
+    try {
+      await updateDoc(doc(db, 'tripPhotos', selectedPhoto.id, 'comments', commentId), {
+        text: editedCommentText.trim(),
+      })
+      setEditingCommentId(null)
+      setEditedCommentText('')
+    } catch (error) {
+      alert('Failed to update comment')
+    } finally {
+      setCommentLoading(false)
+    }
+  }
+  // Delete a comment
+  const handleDeleteComment = async (commentId: string) => {
+    if (!selectedPhoto) return
+    if (!window.confirm('Are you sure you want to delete this comment?')) return
+    setCommentLoading(true)
+    try {
+      await deleteDoc(doc(db, 'tripPhotos', selectedPhoto.id, 'comments', commentId))
+    } catch (error) {
+      alert('Failed to delete comment')
+    } finally {
+      setCommentLoading(false)
+    }
+  }
+  // Load comments for selected photo
+  useEffect(() => {
+    if (!selectedPhoto) {
+      setComments([])
+      return
+    }
+    const commentsRef = collection(db, 'tripPhotos', selectedPhoto.id, 'comments')
+    const commentsQuery = query(commentsRef, orderBy('createdAt', 'asc'))
+    const unsubscribe = onSnapshot(commentsQuery, (snapshot) => {
+      const commentsData: Comment[] = []
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data()
+        commentsData.push({
+          id: docSnap.id,
+          ...data,
+        } as Comment)
+      })
+      setComments(commentsData)
+    })
+    return () => unsubscribe()
+  }, [selectedPhoto])
+  // Add a comment to selected photo
+  const handleAddComment = async () => {
+    if (!currentUser || !selectedPhoto || !newComment.trim()) return
+    setCommentLoading(true)
+    try {
+      await addDoc(collection(db, 'tripPhotos', selectedPhoto.id, 'comments'), {
+        text: newComment.trim(),
+        author: currentUser.email || 'Unknown',
+        createdAt: Timestamp.now(),
+      })
+      setNewComment('')
+    } catch (error) {
+      alert('Failed to add comment')
+    } finally {
+      setCommentLoading(false)
+    }
+  }
   const [dragActive, setDragActive] = useState(false)
   const [showAddTrip, setShowAddTrip] = useState(false)
   const [editingTrip, setEditingTrip] = useState<Trip | null>(null)
@@ -1016,6 +1103,101 @@ export const Trips: React.FC = () => {
               >
                 🗑️ Delete Photo
               </button>
+
+              {/* Comments Section - only in modal */}
+              <div className="mt-6">
+                <h4 className="text-lg font-bold mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>Comments</h4>
+                <div className="max-h-60 overflow-y-auto mb-4">
+                  {comments.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No comments yet. Be the first to comment!</p>
+                  ) : (
+                    comments.map((comment) => {
+                      const isAuthor = currentUser && comment.author === currentUser.email;
+                      return (
+                        <div key={comment.id} className="mb-2 p-2 rounded bg-amber-50 border border-amber-100">
+                          {editingCommentId === comment.id ? (
+                            <div className="flex gap-2 items-center">
+                              <input
+                                type="text"
+                                value={editedCommentText}
+                                onChange={e => setEditedCommentText(e.target.value)}
+                                className="flex-1 px-2 py-1 border border-amber-200 rounded"
+                                style={{fontFamily: 'Poppins, sans-serif'}}
+                                disabled={commentLoading}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') handleSaveEditedComment(comment.id)
+                                  if (e.key === 'Escape') { setEditingCommentId(null); setEditedCommentText('') }
+                                }}
+                              />
+                              <button
+                                onClick={() => handleSaveEditedComment(comment.id)}
+                                className="text-green-600 hover:text-green-700 px-2"
+                                disabled={commentLoading || !editedCommentText.trim()}
+                                title="Save"
+                              >✓</button>
+                              <button
+                                onClick={() => { setEditingCommentId(null); setEditedCommentText('') }}
+                                className="text-red-600 hover:text-red-700 px-2"
+                                title="Cancel"
+                              >✕</button>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-center">
+                                <div className="text-sm text-gray-800" style={{fontFamily: 'Poppins, sans-serif'}}>{comment.text}</div>
+                                {isAuthor && (
+                                  <div className="flex gap-1 ml-2">
+                                    <button
+                                      onClick={() => handleEditComment(comment.id, comment.text)}
+                                      className="text-amber-600 hover:text-amber-800 text-xs px-1"
+                                      title="Edit"
+                                      disabled={commentLoading}
+                                    >✏️</button>
+                                    <button
+                                      onClick={() => handleDeleteComment(comment.id)}
+                                      className="text-red-600 hover:text-red-800 text-xs px-1"
+                                      title="Delete"
+                                      disabled={commentLoading}
+                                    >🗑️</button>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1 flex justify-between">
+                                <span>by {comment.author}</span>
+                                <span>{comment.createdAt.toDate().toLocaleString()}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )
+                    })
+                  )}
+                </div>
+                {currentUser && (
+                  <div className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={newComment}
+                      onChange={e => setNewComment(e.target.value)}
+                      placeholder="Add a comment..."
+                      className="flex-1 px-3 py-2 border border-amber-200 rounded focus:ring-amber-500 focus:outline-none"
+                      style={{fontFamily: 'Poppins, sans-serif'}}
+                      disabled={commentLoading}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') handleAddComment()
+                      }}
+                    />
+                    <button
+                      onClick={handleAddComment}
+                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-semibold rounded-lg transition-colors"
+                      style={{fontFamily: 'Poppins, sans-serif'}}
+                      disabled={commentLoading || !newComment.trim()}
+                    >
+                      {commentLoading ? 'Posting...' : 'Post'}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
