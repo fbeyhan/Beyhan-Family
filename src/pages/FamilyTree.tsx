@@ -901,11 +901,11 @@ export const FamilyTree: React.FC = () => {
                 Parents
               </label>
               {memberForm.parentIds.map((parentId, index) => (
-                <div key={index} className="flex gap-2 mb-2">
+                <div key={index} className="flex flex-col sm:flex-row gap-2 mb-2 w-full">
                   <select
                     value={parentId}
                     onChange={(e) => updateParentId(index, e.target.value)}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="min-w-0 w-full sm:flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     style={{fontFamily: 'Poppins, sans-serif'}}
                   >
                     <option value="">Select parent {index + 1}</option>
@@ -915,7 +915,7 @@ export const FamilyTree: React.FC = () => {
                   </select>
                   <button
                     onClick={() => removeParentField(index)}
-                    className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold rounded-lg"
+                    className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-semibold rounded-lg w-full sm:w-auto"
                   >
                     Remove
                   </button>
