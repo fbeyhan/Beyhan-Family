@@ -708,6 +708,7 @@ beyhan-family/
 - ✅ Location information
 - ✅ Trip descriptions and highlights
 - ✅ Photo gallery with Firebase Storage
+- ✅ Emoji selection for each trip (customize trip cards with emoji)
 - ✅ Timezone-consistent date handling
 
 ### Family Pictures Gallery
@@ -715,17 +716,20 @@ beyhan-family/
 - ✅ Grid layout gallery view
 - ✅ Firebase Storage integration
 - ✅ Image optimization
+- ✅ Emoji selection for each photo (customize gallery with emoji)
+- ✅ Editable comments section for each photo (add, edit, delete comments directly on photo modal)
 
 ### Personal Finance Tracking (Admin-Only)
 - ✅ Admin-only access control via environment variables
 - ✅ Transaction management (income/expenses)
 - ✅ 14 expense categories + 4 income categories with subcategories
 - ✅ Full CRUD operations (Create, Read, Update, Delete)
-- ✅ Edit functionality with inline form (date, amount, merchant, payment method, description)
+- ✅ "Who made expense" dropdown (track which family member made each expense)
+- ✅ Edit functionality with inline form (date, amount, merchant, payment method, description, and who made expense)
 - ✅ Asset/investment tracking with net worth calculations
-- ✅ Transaction filtering (type, category, date range, search)
+- ✅ Transaction filtering (type, category, date range, search, and by family member)
 - ✅ Reports & analytics with interactive charts (recharts library)
-- ✅ Monthly expense/income analysis
+- ✅ Monthly and yearly expense/income analysis (select both month and year in reports)
 - ✅ Net income trend visualization
 - ✅ CSV export functionality
 - ✅ Eastern US timezone handling for accurate date entry
@@ -887,10 +891,10 @@ Investment and retirement account management:
 
 #### 5. **Reports & Analytics** ([FinanceReports.tsx](src/pages/FinanceReports.tsx))
 Visual financial analysis with recharts library:
-- **Month Selector:** Analyze any month from dropdown
+- **Month & Year Selector:** Analyze any month and year from dropdowns
 - **Summary Cards:**
-  - Total expenses for selected month
-  - Total income for selected month
+  - Total expenses for selected month and year
+  - Total income for selected month and year
   - Net income (income - expenses)
   - Color-coded for positive/negative values
 
@@ -915,6 +919,16 @@ Visual financial analysis with recharts library:
   - Tooltip with exact values
 
 - **CSV Export:** Download transaction data for external analysis
+
+### Other Notable Features (2025)
+- 🔥 Editable comments for each photo in Family Pictures (add, edit, delete)
+- 🔥 Emoji support for customizing trips and family pictures
+- 🔥 "Who made expense" dropdown for finance entries
+- 🔥 Year selector in finance reports (analyze by month and year)
+- 🔥 Improved filtering and analytics in finance pages
+- 🔥 Enhanced UI/UX for modals and dropdowns
+- 🔥 Real-time updates for comments and transactions
+
 
 ### Data Models
 
