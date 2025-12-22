@@ -832,7 +832,7 @@ export const FamilyTree: React.FC = () => {
                   type="date"
                   value={memberForm.dateOfBirth}
                   onChange={(e) => setMemberForm({ ...memberForm, dateOfBirth: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   style={{fontFamily: 'Poppins, sans-serif'}}
                 />
               </div>
@@ -875,7 +875,7 @@ export const FamilyTree: React.FC = () => {
                   type="date"
                   value={memberForm.dateOfDeath}
                   onChange={(e) => setMemberForm({ ...memberForm, dateOfDeath: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   style={{fontFamily: 'Poppins, sans-serif'}}
                 />
               </div>
