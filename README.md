@@ -236,7 +236,7 @@ VITE_FIREBASE_PROJECT_ID=your_project_id
 
 **File: `src/components/ProtectedRoute.tsx`**
 - **Purpose:** Security wrapper that prevents unauthorized access to protected pages
-- **Used by:** Dashboard, FamilyPictures, Trips, FamilyTree, ChangePassword
+- **Used by:** Dashboard, FamilyPictures, Trips, FamilyTree, ChangePassword, Finance, FinanceAdd, FinanceTransactions, FinanceAssets, FinanceReports
 - **How it works:**
   1. Checks if user is authenticated
   2. If yes → renders the protected page
@@ -1162,7 +1162,7 @@ cypress/
 - ✅ Filter by category
 - ✅ Filter by date range (today, week, month, year)
 - ✅ Search transactions by description
-- ✅ Display net total calculation
+- ✅ Display net total calculation top
 - ✅ Delete transaction with confirmation
 - ✅ Empty state for no transactions
 - ✅ Navigate back to finance dashboard
@@ -1241,6 +1241,12 @@ npx cypress run --spec "cypress/e2e/financeTransactions.cy.ts"
 
 # Run tests with specific browser
 npx cypress run --browser chrome
+```
+**Test with Production Build:**
+```bash
+npm run build
+npx vite preview --port 5174
+npx cypress run --config baseUrl=http://localhost:5174
 ```
 
 ### CI/CD Integration
