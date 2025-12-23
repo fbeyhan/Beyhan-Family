@@ -1,4 +1,6 @@
 ﻿﻿import React, { useState, useEffect, useRef } from 'react'
+import DatePicker from 'react-datepicker'
+import 'react-datepicker/dist/react-datepicker.css'
 import { Link } from 'react-router-dom'
 import { storage, db } from '../config/firebase'
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage'
@@ -828,12 +830,16 @@ export const FamilyTree: React.FC = () => {
                 <label className="block text-gray-700 font-medium mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>
                   Date of Birth
                 </label>
-                <input
-                  type="date"
-                  value={memberForm.dateOfBirth}
-                  onChange={(e) => setMemberForm({ ...memberForm, dateOfBirth: e.target.value })}
-                  className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
-                  style={{fontFamily: 'Poppins, sans-serif'}}
+                <DatePicker
+                  selected={memberForm.dateOfBirth ? new Date(memberForm.dateOfBirth) : null}
+                  onChange={(date: Date | null) => setMemberForm({ ...memberForm, dateOfBirth: date ? date.toISOString().slice(0, 10) : '' })}
+                  dateFormat="yyyy-MM-dd"
+                  placeholderText="YYYY-MM-DD"
+                  className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                  isClearable
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
                 />
               </div>
 
@@ -871,12 +877,16 @@ export const FamilyTree: React.FC = () => {
                 <label className="block text-gray-700 font-medium mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>
                   Date of Death (if applicable)
                 </label>
-                <input
-                  type="date"
-                  value={memberForm.dateOfDeath}
-                  onChange={(e) => setMemberForm({ ...memberForm, dateOfDeath: e.target.value })}
-                  className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none bg-white"
-                  style={{fontFamily: 'Poppins, sans-serif'}}
+                <DatePicker
+                  selected={memberForm.dateOfDeath ? new Date(memberForm.dateOfDeath) : null}
+                  onChange={(date: Date | null) => setMemberForm({ ...memberForm, dateOfDeath: date ? date.toISOString().slice(0, 10) : '' })}
+                  dateFormat="yyyy-MM-dd"
+                  placeholderText="YYYY-MM-DD"
+                  className="w-full min-w-0 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white"
+                  isClearable
+                  showMonthDropdown
+                  showYearDropdown
+                  dropdownMode="select"
                 />
               </div>
 
