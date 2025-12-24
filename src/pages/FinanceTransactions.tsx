@@ -497,10 +497,6 @@ const FinanceTransactions = () => {
                           </button>
                           <button
                             onClick={() => handleDelete(transaction.id)}
-                            onTouchEnd={(e) => {
-                              e.preventDefault();
-                              handleDelete(transaction.id);
-                            }}
                             className="px-3 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           >
                             Delete
