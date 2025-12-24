@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { isAdmin } from '../utils/adminAuth';
@@ -132,11 +132,15 @@ const FinanceTransactions = () => {
     setFilteredTransactions(filtered);
   }, [transactions, filterType, filterCategory, dateRange, searchTerm]);
 
+  // Prevent double popup on mobile/desktop
+  const deleteLock = useRef(false);
   const handleDelete = async (id: string) => {
+    if (deleteLock.current) return;
+    deleteLock.current = true;
+    setTimeout(() => { deleteLock.current = false; }, 500);
     if (!confirm('Are you sure you want to delete this transaction?')) {
       return;
     }
-
     try {
       await deleteDoc(doc(db, 'transactions', id));
       setTransactions(transactions.filter((t) => t.id !== id));
