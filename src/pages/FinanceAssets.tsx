@@ -443,6 +443,10 @@ const FinanceAssets = () => {
                         </button>
                         <button
                           onClick={() => handleDelete(asset.id)}
+                          onTouchEnd={(e) => {
+                            e.preventDefault();
+                            handleDelete(asset.id);
+                          }}
                           className="px-4 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
                           Delete
