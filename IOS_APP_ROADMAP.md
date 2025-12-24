@@ -492,4 +492,27 @@ If you do not own a Mac, you still have several options for building, testing, a
 
 > **Note:** You only need a Mac for the final build, testing on a real device, and App Store/TestFlight distribution. All coding and most testing can be done on Windows using Expo Go and simulators.
 
+---
+
+## Windows vs Mac: How Much Can You Build Before You Need a Mac?
+
+You can complete nearly all coding, setup, and local testing for your iOS app on your Windows PC using Visual Studio Code and GitHub Copilot. The only stages that require a Mac device are building the final iOS app binary, running on an iOS simulator, and distributing via TestFlight or the App Store.
+
+**Development Breakdown:**
+
+- **Windows PC (90–95%):**
+	- Set up Expo project, install dependencies, and write all app code.
+	- Connect to Firebase, implement authentication, navigation, and CRUD features.
+	- Test app logic and UI using Expo Go on your iOS/Android device.
+	- Write and test Firestore security rules, data structure, and real-time updates.
+	- Prepare for iOS build and distribution.
+
+- **Mac Required (Final 5–10%):**
+	- Build the iOS binary (.ipa file).
+	- Run on iOS simulator (optional, but only available on Mac).
+	- Submit to TestFlight or App Store for distribution.
+
+**Summary:**
+You only need a Mac for the final build, testing on a real device, and App Store/TestFlight distribution. All coding and most testing can be done on Windows using Expo Go and simulators. Consider Mac cloud rental, borrowing, or public access for these final steps.
+
 **This roadmap gives you a complete, step-by-step process to build your iOS app with the same secure, role-based features as your website. Each section explains the reasoning and actions so you can follow and adapt as you learn.**
