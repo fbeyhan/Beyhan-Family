@@ -472,4 +472,24 @@ const styles = StyleSheet.create({
 
 ---
 
+> **Clarification:** You can use Visual Studio Code and GitHub Copilot for almost all development on your personal Windows computer. A Mac device is only required for building, testing, and distributing your iOS app (steps like running on a simulator, using Xcode, or submitting to the App Store). You can do all coding, Firebase setup, and Expo development on Windows, then use a Mac for the final build and deployment steps.
+
+---
+
+## Alternatives: Accessing a Mac for iOS Build/Distribution
+
+If you do not own a Mac, you still have several options for building, testing, and distributing your iOS app:
+
+- **Mac Cloud Rental Services:**
+	- [MacStadium](https://www.macstadium.com/) and [MacInCloud](https://www.macincloud.com/) let you rent a Mac in the cloud by the hour or month. You can access Xcode, run simulators, and upload to the App Store remotely.
+	- [AWS EC2 Mac Instances](https://aws.amazon.com/ec2/instance-types/mac/) are another option for on-demand Mac access.
+- **Borrow a Mac:**
+	- If you have friends, family, or colleagues with a Mac, you can use their device for the final build and upload steps.
+- **Local Apple Store or University Labs:**
+	- Some Apple Stores or university computer labs provide public access to Mac computers with Xcode installed.
+- **Secondhand or Refurbished Mac:**
+	- Consider purchasing a used or refurbished Mac Mini, which is often the most affordable option for iOS development.
+
+> **Note:** You only need a Mac for the final build, testing on a real device, and App Store/TestFlight distribution. All coding and most testing can be done on Windows using Expo Go and simulators.
+
 **This roadmap gives you a complete, step-by-step process to build your iOS app with the same secure, role-based features as your website. Each section explains the reasoning and actions so you can follow and adapt as you learn.**
