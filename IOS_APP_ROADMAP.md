@@ -516,3 +516,29 @@ You can complete nearly all coding, setup, and local testing for your iOS app on
 You only need a Mac for the final build, testing on a real device, and App Store/TestFlight distribution. All coding and most testing can be done on Windows using Expo Go and simulators. Consider Mac cloud rental, borrowing, or public access for these final steps.
 
 **This roadmap gives you a complete, step-by-step process to build your iOS app with the same secure, role-based features as your website. Each section explains the reasoning and actions so you can follow and adapt as you learn.**
+
+---
+
+## Repository Strategy: Should You Use the Same Repo?
+
+You have two main options for managing your iOS app code:
+
+**1. Monorepo (Recommended for Most Cases):**
+- Add your iOS app as a new folder (e.g., `/mobile` or `/ios-app`) in your existing BEYHAN-FAMILY repository.
+- This makes it easy to share business logic, Firebase config, and utility functions between your web and mobile apps.
+- Keeps all related code in one place, which is simpler for small teams and projects with shared features.
+
+**2. Separate Repository:**
+- Create a new repository just for the iOS app.
+- This provides a clean separation, which can be useful if the mobile and web apps will diverge significantly in the future.
+- Slightly more overhead for sharing code and keeping logic in sync.
+
+**Code Reusability:**
+- Much of your existing code (business logic, Firebase config, utility functions, and data structure) is reusable in a React Native/Expo app.
+- UI components will need to be rewritten for React Native, but authentication, Firestore logic, and most utilities can be adapted or shared.
+
+**Recommendation:**
+For your use case (shared logic, similar features, small team), a monorepo is usually best. Create a `/mobile` or `/ios-app` folder in BEYHAN-FAMILY and reuse as much code as possible. Use a package manager like Yarn Workspaces if you want to share code more formally between web and mobile.
+
+If you need a sample folder structure or more details on code sharing, let me know!
+---
