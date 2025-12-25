@@ -12,7 +12,7 @@ A modern, secure family website built with React, TypeScript, Firebase Authentic
 - [Cypress Testing](#cypress-testing)
 - [Deployment](#deployment)
 
----
+----
 
 ## Project Overview
 
