@@ -2,7 +2,7 @@
 
 This guide walks you through building an iOS app with the same functionalities as your website: a family portal for members and finance features for admin users. Each step explains the process, reasoning, and how to achieve secure, role-based access using Expo (React Native) and Firebase.
 
-----
+-----
 
 ## 1. Feasibility & Cost
 
