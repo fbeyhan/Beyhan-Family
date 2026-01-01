@@ -217,6 +217,10 @@ export const Trips: React.FC = () => {
       setTripPhotos((prev) => prev.map((p) =>
         p.id === photo.id ? { ...p, reactions } : p
       ))
+      // Update selectedPhoto if it's the one being reacted to
+      if (selectedPhoto && selectedPhoto.id === photo.id) {
+        setSelectedPhoto({ ...selectedPhoto, reactions })
+      }
     } catch (error) {
       console.error('Failed to update emoji reaction:', error)
       const errorMsg = error instanceof Error ? error.message : String(error)
@@ -1033,7 +1037,9 @@ export const Trips: React.FC = () => {
           >
             <button
               onClick={() => setSelectedPhoto(null)}
-              className="absolute top-4 right-4 w-10 h-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center text-gray-800 font-bold text-xl shadow-lg z-10 transition-all"
+              className="fixed top-6 right-8 w-10 h-10 bg-white/95 hover:bg-amber-100 rounded-full flex items-center justify-center text-gray-900 font-bold text-xl shadow-xl z-[120] border-2 border-amber-300 transition-all"
+              style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.15)', cursor: 'pointer', marginRight: '12px' }}
+              aria-label="Close photo modal"
             >
               ×
             </button>
@@ -1047,6 +1053,36 @@ export const Trips: React.FC = () => {
             </div>
             
             <div className="p-6 bg-white">
+              {/* Emoji Reactions Section */}
+              <div className="mb-4">
+                <h4 className="text-lg font-bold mb-2" style={{fontFamily: 'Poppins, sans-serif'}}>Emojis</h4>
+                <div className="flex overflow-x-auto gap-2 items-center mb-2 scrollbar-thin scrollbar-thumb-amber-300 scrollbar-track-amber-100" style={{WebkitOverflowScrolling: 'touch', maxWidth: '220px'}}>
+                  {selectedPhoto.reactions && Object.entries(selectedPhoto.reactions).length > 0 ? (
+                    Object.entries(selectedPhoto.reactions).map(([emoji, users]) => (
+                      <div key={emoji} className="flex items-center bg-amber-50 border border-amber-200 rounded-full px-3 py-1 text-xl cursor-pointer hover:bg-amber-100 transition-all min-w-[48px] justify-center" style={{fontFamily: 'Poppins, sans-serif'}}>
+                        <span>{emoji}</span>
+                        <span className="ml-1 text-xs text-gray-600">{users.length}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <span className="text-gray-400 text-sm">No emojis yet. Add one!</span>
+                  )}
+                </div>
+                {/* Emoji Picker */}
+                <div className="flex overflow-x-auto gap-2 mt-2 scrollbar-thin scrollbar-thumb-amber-300 scrollbar-track-amber-100" style={{WebkitOverflowScrolling: 'touch', maxWidth: '220px'}}>
+                  {emojiOptions.map((emoji) => (
+                    <button
+                      key={emoji}
+                      onClick={() => handleEmojiReaction(selectedPhoto, emoji)}
+                      className="bg-white border border-amber-200 rounded-full px-3 py-1 text-xl hover:bg-amber-100 focus:bg-amber-200 focus:outline-none transition-all min-w-[48px] justify-center"
+                      style={{fontFamily: 'Poppins, sans-serif'}}
+                      aria-label={`Add emoji ${emoji}`}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
               {editingPhoto === selectedPhoto.id ? (
                 <div className="mb-4">
                   <input
