@@ -927,8 +927,6 @@ export const Trips: React.FC = () => {
                           key={photo.id}
                           className="group relative bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer border border-amber-100"
                           onClick={() => setSelectedPhoto(photo)}
-                          onMouseEnter={() => setHoveredPhotoId(photo.id)}
-                          onMouseLeave={() => setHoveredPhotoId((id) => (id === photo.id ? null : id))}
                         >
                           <div className="aspect-square overflow-hidden relative">
                             <img
@@ -954,37 +952,6 @@ export const Trips: React.FC = () => {
                                 )
                               })}
                             </div>
-                            {/* Emoji menu on hover - top left */}
-                            {hoveredPhotoId === photo.id && (
-                              <div
-                                className="absolute top-2 left-2 flex gap-2 bg-white/90 rounded-xl shadow-lg px-3 py-2 z-20 animate-fade-in"
-                                style={{
-                                  maxWidth: '90%',
-                                  overflowX: 'auto',
-                                  whiteSpace: 'nowrap',
-                                  scrollbarWidth: 'thin',
-                                }}
-                              >
-                                {emojiOptions.map((emoji) => {
-                                  const user = currentUser?.email
-                                  const selected = user && (reactions[emoji]?.includes(user))
-                                  return (
-                                    <button
-                                      key={emoji}
-                                      className={`text-2xl transition-transform hover:scale-125 inline-block ${selected ? 'ring-2 ring-amber-400' : ''}`}
-                                      style={{ minWidth: 40 }}
-                                      onClick={e => {
-                                        e.stopPropagation()
-                                        handleEmojiReaction(photo, emoji)
-                                      }}
-                                      title={emoji}
-                                    >
-                                      {emoji}
-                                    </button>
-                                  )
-                                })}
-                              </div>
-                            )}
                           </div>
                           <div className="p-2">
                             {editingPhoto === photo.id ? (
