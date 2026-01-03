@@ -250,14 +250,14 @@ export const Trips: React.FC = () => {
       }
 
       if (tripForm.startDate) {
-        // Store date without timezone conversion
+        // Store date as UTC midnight to avoid timezone issues
         const [year, month, day] = tripForm.startDate.split('-').map(Number)
-        tripData.startDate = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
+        tripData.startDate = Timestamp.fromDate(new Date(Date.UTC(year, month - 1, day)))
       }
       if (tripForm.endDate) {
-        // Store date without timezone conversion
+        // Store date as UTC midnight to avoid timezone issues
         const [year, month, day] = tripForm.endDate.split('-').map(Number)
-        tripData.endDate = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
+        tripData.endDate = Timestamp.fromDate(new Date(Date.UTC(year, month - 1, day)))
       }
 
       console.log('Attempting to add trip with data:', tripData)
@@ -297,14 +297,14 @@ export const Trips: React.FC = () => {
       }
 
       if (tripForm.startDate) {
-        // Store date without timezone conversion
+        // Store date as UTC midnight to avoid timezone issues
         const [year, month, day] = tripForm.startDate.split('-').map(Number)
-        updateData.startDate = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
+        updateData.startDate = Timestamp.fromDate(new Date(Date.UTC(year, month - 1, day)))
       }
       if (tripForm.endDate) {
-        // Store date without timezone conversion
+        // Store date as UTC midnight to avoid timezone issues
         const [year, month, day] = tripForm.endDate.split('-').map(Number)
-        updateData.endDate = Timestamp.fromDate(new Date(year, month - 1, day, 12, 0, 0))
+        updateData.endDate = Timestamp.fromDate(new Date(Date.UTC(year, month - 1, day)))
       }
 
       await updateDoc(doc(db, 'familyTrips', editingTrip.id), updateData)
@@ -327,29 +327,37 @@ export const Trips: React.FC = () => {
   }
 
   const handleEditTrip = (trip: Trip) => {
-    setEditingTrip(trip)
-    setTripForm({
-      title: trip.title,
-      location: trip.location,
-      emoji: trip.emoji,
-      startDate: trip.startDate ? (() => {
-        const date = trip.startDate.toDate()
-        const year = date.getFullYear()
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const day = String(date.getDate()).padStart(2, '0')
-        return `${year}-${month}-${day}`
-      })() : '',
-      endDate: trip.endDate ? (() => {
-        const date = trip.endDate.toDate()
-        const year = date.getFullYear()
-        const month = String(date.getMonth() + 1).padStart(2, '0')
-        const day = String(date.getDate()).padStart(2, '0')
-        return `${year}-${month}-${day}`
-      })() : '',
-      description: trip.description || ''
-    })
-    setShowAddTrip(false)
-  }
+  setEditingTrip(trip)
+  setTripForm({
+    title: trip.title,
+    location: trip.location,
+    emoji: trip.emoji,
+    startDate: trip.startDate
+      ? typeof trip.startDate === 'string'
+        ? trip.startDate
+        : (() => {
+            const date = (trip.startDate as Timestamp).toDate();
+            const year = date.getUTCFullYear();
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          })()
+      : '',
+    endDate: trip.endDate
+      ? typeof trip.endDate === 'string'
+        ? trip.endDate
+        : (() => {
+            const date = (trip.endDate as Timestamp).toDate();
+            const year = date.getUTCFullYear();
+            const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(date.getUTCDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          })()
+      : '',
+    description: trip.description || ''
+  })
+  setShowAddTrip(false)
+}
 
   const handleDeleteTrip = async (trip: Trip) => {
     if (!window.confirm(`Are you sure you want to delete "${trip.title}"? This will also delete all photos associated with this trip.`)) return
@@ -531,14 +539,23 @@ export const Trips: React.FC = () => {
     }
   }
 
-  const formatDate = (timestamp?: Timestamp) => {
-    if (!timestamp) return ''
-    return timestamp.toDate().toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
-    })
+  const formatDate = (date?: Timestamp | string) => {
+  if (!date) return '';
+  if (typeof date === 'string') {
+    // Accepts 'YYYY-MM-DD' or similar
+    const d = new Date(date);
+    if (!isNaN(d.getTime())) {
+      // Always use UTC for display
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+    }
+    return date; // fallback: show as-is
   }
+  if (typeof date === 'object' && typeof (date as any).toDate === 'function') {
+    // Always use UTC for display
+    return (date as Timestamp).toDate().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  }
+  return '';
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-rose-50">

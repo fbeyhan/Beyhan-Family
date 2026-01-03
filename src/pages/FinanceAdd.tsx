@@ -83,7 +83,12 @@ const FinanceAdd = () => {
         category,
         subcategory: subcategory || null,
         description: description || null,
-        date: Timestamp.fromDate(new Date(date)),
+        // Save as UTC midnight to avoid timezone issues
+        date: Timestamp.fromDate(new Date(Date.UTC(
+          Number(date.split('-')[0]),
+          Number(date.split('-')[1]) - 1,
+          Number(date.split('-')[2])
+        ))),
         merchant: merchant || null,
         paymentMethod: paymentMethod || null,
         owner,
