@@ -1599,13 +1599,6 @@ The workflow file (`.github/workflows/deploy.yml`) automatically injects these d
 - Add all six Firebase variables
 - Select production, preview, and development environments
 
-### Firebase Configuration
-
-Get these values from:
-1. Firebase Console → Project Settings
-2. Your apps → Web app
-3. Firebase configuration object
-
 ---
 
 ## Troubleshooting Common Issues
@@ -1848,3 +1841,47 @@ Private family project - not for redistribution.
 ## Contact
 
 For questions or issues, contact the repository maintainer through GitHub.
+
+---
+
+## Yarn Dependency Management
+
+This project now uses **Yarn** for dependency management. Please use Yarn commands instead of npm:
+
+### Common Yarn Commands
+- Install dependencies:
+  ```bash
+  yarn install
+  ```
+- Add a package:
+  ```bash
+  yarn add <package>
+  ```
+- Add a dev dependency:
+  ```bash
+  yarn add --dev <package>
+  ```
+- Remove a package:
+  ```bash
+  yarn remove <package>
+  ```
+- Upgrade dependencies:
+  ```bash
+  yarn upgrade
+  ```
+
+### Why Yarn?
+- Yarn supports the `resolutions` field, which is used to enforce security updates for transitive dependencies (e.g., `qs@6.14.1`).
+- Faster and more reliable installs.
+- Avoids conflicts with npm lock files.
+
+### Lock Files
+- The `package-lock.json` file has been removed. Only use `yarn.lock` for dependency management.
+
+---
+
+## Security & Sensitive Information
+- **Environment variables** (such as Firebase keys) are stored in `.env`, which is excluded from git by `.gitignore`.
+- **Never commit `.env` or other secrets** to the public repository.
+- Use `.env.example` as a template for sharing config structure without secrets.
+- Double-check `.gitignore` to ensure sensitive files are not tracked.
