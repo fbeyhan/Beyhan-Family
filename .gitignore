@@ -3,6 +3,11 @@ dist
 cypress/screenshots
 cypress/videos
 
+# Playwright
+playwright/test-results
+playwright/reports
+playwright/.cache
+
 # Environment variables
 .env
 .env.local
